@@ -156,7 +156,7 @@ tbody tr:hover{background:rgba(248,250,252,.8)}
     <div class="stat purple"><div class="stat-label">Prêts</div><div class="stat-val" id="sReady">0</div></div>
     <div class="stat blue"><div class="stat-label">Postés</div><div class="stat-val" id="sPosted">0</div></div>
     <div class="stat green"><div class="stat-label">Vendus</div><div class="stat-val" id="sSold">0</div></div>
-    <div class="stat red"><div class="stat-label">À prolonger</div><div class="stat-val" id="sPending">0</div></div>
+    <div class="stat red"><div class="stat-label">Prolonger</div><div class="stat-val" id="sPending">0</div></div>
   </div>
 
   <div id="cfgAlert" class="banner"></div>
@@ -178,7 +178,7 @@ tbody tr:hover{background:rgba(248,250,252,.8)}
       <button class="fbtn" data-f="ready">Prêts</button>
       <button class="fbtn" data-f="posted">Postés</button>
       <button class="fbtn" data-f="sold">Vendus</button>
-      <button class="fbtn" data-f="pending_order">À prolonger</button>
+      <button class="fbtn" data-f="pending_order">Prolonger</button>
     </div>
     <button class="btn btn-ghost" onclick="charger()">↻</button>
   </div>
@@ -220,7 +220,7 @@ let rowLimit=ROWS_PER_PAGE;
 /* ===== DEBOUNCE ===== */
 let _renderTimer=null;
 function debouncedRender(){clearTimeout(_renderTimer);_renderTimer=setTimeout(render,120)}
-const STATUS_LABEL={draft:'À traiter',ready:'Prêt',posted:'Posté',sold:'Vendu',pending_order:'À prolonger'};
+const STATUS_LABEL={draft:'À traiter',ready:'Prêt',posted:'Posté',sold:'Vendu',pending_order:'Prolonger'};
 const STATUS_TAG={draft:'amber',ready:'purple',posted:'blue',sold:'green',pending_order:'red'};
 
 requireAuth(['admin','employee']).then(p=>{
@@ -403,7 +403,7 @@ async function toggleField(id,field,val){
 }
 
 // Prolonger : met à jour à la fois le flag boolean ET le status pour que
-// le compteur "À prolonger" (basé sur status='pending_order') reste synchronisé.
+// le compteur "Prolonger" (basé sur status='pending_order') reste synchronisé.
 async function togglePending(id,checked){
   const art=articles.find(a=>a.id===id);
   if(!art)return;
@@ -416,7 +416,7 @@ async function togglePending(id,checked){
   }
   const{error}=await sb.from('articles').update(updates).eq('id',id);
   if(error){toast('Erreur: '+error.message,true);return}
-  toast(checked?'À prolonger ✓':'Prolongement annulé');
+  toast(checked?'Prolonger ✓':'Prolongement annulé');
   charger();
 }
 
