@@ -699,25 +699,25 @@ async function sauvegarder(silent){
   const fields={title:title||null,description:desc||null,brand:brand||null,images:uploadedImgs};
   if(willBeComplete && current.status!=='ready') fields.status='ready';
   else if(!willBeComplete && current.status==='ready') fields.status='draft';
-  // Optimistic : on met à jour l'objet local AVANT le call DB pour un re-render instantané
+  // Optimistic : capture l'id et le backup AVANT toute mutation
+  const articleId=current.id;
   const backup={title:current.title,description:current.description,brand:current.brand,images:current.images.slice(),status:current.status};
   Object.assign(current,fields);
   current.images=uploadedImgs.slice();
   const justPromoted = !wasComplete && willBeComplete;
   if(justPromoted){
-    lastPromotedId=current.id;
+    lastPromotedId=articleId;
     bumpDailyDone();
     document.getElementById('cToday').textContent=getTodayCount();
     setTimeout(()=>{lastPromotedId=null},700);
   }
   if(!silent){toast(justPromoted?'🎉 Fiche prête !':'Fiche sauvegardée ✓','success');closeModal();render()}
   // Sync DB en arrière-plan
-  const{error}=await sb.from('articles').update(fields).eq('id',current?current.id:backup.id);
+  const{error}=await sb.from('articles').update(fields).eq('id',articleId);
   if(btn && !silent){btn.textContent='💾 Enregistrer';btn.disabled=false}
   if(error){
-    // Rollback local + re-render
-    const target=articles.find(x=>x.id===(current?current.id:null));
-    if(target){Object.assign(target,backup)}
+    const target=articles.find(x=>x.id===articleId);
+    if(target) Object.assign(target,backup);
     render();
     toast('Erreur: '+error.message,true);
   }
