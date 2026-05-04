@@ -337,7 +337,7 @@ function render(){
       <td>${tag}</td>
       <td><input type="checkbox" class="chk" ${(a.status==='posted'||a.status==='sold'||a.status==='pending_order')?'checked':''} onchange="togglePosted('${a.id}',this.checked)"></td>
       <td><input type="checkbox" class="chk green" ${a.status==='sold'?'checked':''} onchange="toggleSold('${a.id}',this.checked)"></td>
-      <td><input type="checkbox" class="chk amber" ${a.prolonged?'checked':''} onchange="toggleField('${a.id}','prolonged',this.checked)"></td>
+      <td><input type="checkbox" class="chk amber" ${a.prolonged?'checked':''} onchange="togglePending('${a.id}',this.checked)"></td>
       <td><input type="checkbox" class="chk" ${a.warehouse?'checked':''} onchange="toggleField('${a.id}','warehouse',this.checked)"></td>
       <td>${brdCell}</td>
       <td><div class="row-acts">
@@ -400,6 +400,24 @@ async function toggleField(id,field,val){
   const{error}=await sb.from('articles').update({[field]:val}).eq('id',id);
   if(error){toast('Erreur: '+error.message,true);return}
   toast(field+' → '+(val?'oui':'non'));charger();
+}
+
+// Prolonger : met à jour à la fois le flag boolean ET le status pour que
+// le compteur "À prolonger" (basé sur status='pending_order') reste synchronisé.
+async function togglePending(id,checked){
+  const art=articles.find(a=>a.id===id);
+  if(!art)return;
+  const updates={prolonged:checked};
+  if(checked){
+    updates.status='pending_order';
+  } else if(art.status==='pending_order'){
+    // On revient à l'état logique précédent (sold = état avant prolongation typique)
+    updates.status='sold';
+  }
+  const{error}=await sb.from('articles').update(updates).eq('id',id);
+  if(error){toast('Erreur: '+error.message,true);return}
+  toast(checked?'À prolonger ✓':'Prolongement annulé');
+  charger();
 }
 
 async function supprimer(id){
