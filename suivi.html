@@ -449,7 +449,17 @@ async function toggleSold(id,checked){
 }
 
 async function supprimer(id){
-  if(!confirm('Supprimer ce produit ?'))return;
+  // Check if confirmation is required
+  const skipConfirm = localStorage.getItem('noConfirmDelete') === 'true';
+  if(!skipConfirm){
+    const ok = confirm('Supprimer ce produit ?');
+    if(!ok) return;
+  }
+  // Proceed with deletion (always reaches here if skipConfirm or confirmed)
+  await executeDelete(id);
+}
+
+async function executeDelete(id){
   // Optimistic : retire du DOM et de l'array immédiatement
   const tr=document.querySelector(`tr[data-id="${id}"]`);
   const idx=articles.findIndex(a=>a.id===id);
@@ -457,6 +467,9 @@ async function supprimer(id){
   if(tr) tr.remove();
   if(idx>=0) articles.splice(idx,1);
   renderStats(); buildVaccMenu();
+  // Check if tbody is now empty and show placeholder
+  const tbody=document.getElementById('tbody');
+  if(!tbody.querySelector('tr')) tbody.innerHTML='<tr class="empty-row"><td colspan="11">Aucun résultat.</td></tr>';
   const{error}=await sb.from('articles').delete().eq('id',id);
   if(error){
     // Rollback
