@@ -458,8 +458,8 @@ function toggleVaccMenu(){
 function setAccountFilter(id){
   activeVaccId=id;
   document.getElementById('vaccPicker').classList.remove('open');
-  render();
   buildVaccMenu();
+  render(true);
 }
 
 // Fermer le menu au clic extérieur
@@ -481,7 +481,7 @@ function getFilteredArticles(){
 }
 
 /* ===== RENDER ===== */
-function render(){
+function render(skipVaccMenu){
   const list=getFilteredArticles();
   // Vérité = les 3 champs (pas le status DB qui peut être désynchro)
   const draftsSorted=list.filter(a=>!isReadyFiche(a)).sort((a,b)=>completionScore(b)-completionScore(a));
@@ -518,8 +518,8 @@ function render(){
   renderCol('colDraft',draftsSorted,'Tout est traité ! 🎉',draftLimit,'draft');
   renderCol('colReady',readySorted,'Aucune fiche terminée.',readyLimit,'ready');
 
-  // Update account picker counts
-  buildVaccMenu();
+  // Update account picker counts (skip if caller already did it)
+  if(!skipVaccMenu) buildVaccMenu();
 }
 
 function renderCol(id,list,emptyMsg,limit,colType){
@@ -527,7 +527,8 @@ function renderCol(id,list,emptyMsg,limit,colType){
   if(!list.length){host.innerHTML=`<div class="empty">${emptyMsg}</div>`;return}
   const visible=list.slice(0,limit);
   const remaining=list.length-visible.length;
-  let html=visible.map(a=>{
+  // Build HTML for all cards
+  const cardsHtml=visible.map(a=>{
     const name=a.title||hostName(a.supplier_url||'');
     const img=a.images[0]||'';
     const okImg=a.images.length>0;
@@ -552,10 +553,14 @@ function renderCol(id,list,emptyMsg,limit,colType){
         <div class="prod-pills">${pillImg}${pillTitle}${pillDesc}${publishBtn}</div>
       </div>
     </div>`}).join('');
-  if(remaining>0){
-    html+=`<button class="show-more-btn" onclick="showMore('${colType}')">Voir ${remaining} fiche${remaining>1?'s':''} de plus…</button>`;
-  }
-  host.innerHTML=html;
+  const moreHtml=remaining>0?`<button class="show-more-btn" onclick="showMore('${colType}')">Voir ${remaining} fiche${remaining>1?'s':''} de plus…</button>`:'';
+  // Use DocumentFragment for fast DOM swap
+  const frag=document.createDocumentFragment();
+  const tmp=document.createElement('div');
+  tmp.innerHTML=cardsHtml+moreHtml;
+  while(tmp.firstChild) frag.appendChild(tmp.firstChild);
+  host.textContent=''; // fast clear
+  host.appendChild(frag);
 }
 
 function showMore(colType){
@@ -743,7 +748,8 @@ async function markPosted(id, event){
 
   // Retirer de la liste locale après l'animation (200ms = durée du fade)
   setTimeout(()=>{
-    articles = articles.filter(a => a.id !== id);
+    const idx=articles.findIndex(a => a.id === id);
+    if(idx>=0) articles.splice(idx,1);
     render();
     toast('Fiche publiée ✅', 'success');
   }, 220);

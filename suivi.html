@@ -293,8 +293,9 @@ function toggleVaccMenu(){
 function setAccountFilter(id){
   activeVaccId=id;
   document.getElementById('vaccPicker').classList.remove('open');
-  render();
   buildVaccMenu();
+  renderStats();
+  render();
 }
 
 document.addEventListener('click',e=>{
@@ -359,11 +360,13 @@ function render(){
   if(!list.length){body.innerHTML='<tr class="empty-row"><td colspan="11">Aucun résultat.</td></tr>';return}
   const visible=list.slice(0,rowLimit);
   const remaining=list.length-visible.length;
-  let html=visible.map(renderRow).join('');
-  if(remaining>0){
-    html+=`<tr class="show-more-row"><td colspan="11"><button class="show-more-btn" onclick="showMoreRows()">Voir ${remaining} ligne${remaining>1?'s':''} de plus…</button></td></tr>`;
-  }
-  body.innerHTML=html;
+  // Use DocumentFragment for faster DOM insertion
+  const frag=document.createDocumentFragment();
+  const tmp=document.createElement('tbody');
+  tmp.innerHTML=visible.map(renderRow).join('')+(remaining>0?`<tr class="show-more-row"><td colspan="11"><button class="show-more-btn" onclick="showMoreRows()">Voir ${remaining} ligne${remaining>1?'s':''} de plus…</button></td></tr>`:'');
+  while(tmp.firstChild) frag.appendChild(tmp.firstChild);
+  body.textContent=''; // fast clear
+  body.appendChild(frag);
 }
 
 function showMoreRows(){
