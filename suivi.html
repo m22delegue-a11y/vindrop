@@ -238,25 +238,43 @@ function showErr(h){const el=document.getElementById('cfgAlert');el.innerHTML='<
 function hostName(url){try{return new URL(url).hostname.replace('www.','')}catch{return'lien'}}
 
 async function init(){
-  document.querySelectorAll('.fbtn').forEach(b=>b.onclick=()=>{filtre=b.dataset.f;document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');render()});
+  document.querySelectorAll('.fbtn').forEach(b=>b.onclick=()=>{filtre=b.dataset.f;document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');rowLimit=ROWS_PER_PAGE;renderFast()});
   await charger();
   setInterval(charger,60000);
 }
 
+/* ===== FETCH GUARD : empêche les double-fetch concurrents ===== */
+let _fetchId=0;
+
 async function charger(){
-  // RLS filtre : l'employé ne voit que les articles dont le compte Vinted lui est assigné.
+  const myFetch=++_fetchId; // identifiant unique pour cette requête
+
+  // Construire la requête articles avec filtre conditionnel
+  let artQuery=sb.from('articles')
+    .select('id,title,description,brand,price,min_price,size,color,supplier_url,images,status,prolonged,warehouse,bordereau,vinted_account_id,created_at, vinted_account:vinted_accounts!vinted_account_id(id,name)');
+
+  // Filtre côté Supabase si un compte est sélectionné
+  if(activeVaccId){
+    artQuery=artQuery.eq('vinted_account_id',activeVaccId);
+  }
+
+  artQuery=artQuery.order('created_at',{ascending:false});
+
+  // Les comptes Vinted sont toujours chargés en entier (pour le menu)
   const [vaccRes,artRes]=await Promise.all([
     sb.from('vinted_accounts').select('id,name').order('name'),
-    sb.from('articles')
-      .select('id,title,description,brand,price,min_price,size,color,supplier_url,images,status,prolonged,warehouse,bordereau,vinted_account_id,created_at, vinted_account:vinted_accounts!vinted_account_id(id,name)')
-      .order('created_at',{ascending:false})
+    artQuery
   ]);
+
+  // Guard : si un fetch plus récent a été lancé, ignorer ce résultat
+  if(myFetch!==_fetchId) return;
+
   if(artRes.error){showErr(esc(artRes.error.message));return}
   document.getElementById('cfgAlert').style.display='none';
   vaccs=vaccRes.data||[];
   articles=(artRes.data||[]).map(a=>({...a,images:Array.isArray(a.images)?a.images:[]}));
   buildVaccMenu();
-  renderStats();render();
+  renderStats();renderFast();
 }
 
 function buildVaccMenu(){
@@ -291,12 +309,14 @@ function toggleVaccMenu(){
   document.getElementById('vaccPicker').classList.toggle('open');
 }
 
-function setAccountFilter(id){
+async function setAccountFilter(id){
   activeVaccId=id;
   document.getElementById('vaccPicker').classList.remove('open');
+  rowLimit=ROWS_PER_PAGE;
+  // Mettre à jour le menu immédiatement (feedback visuel instant)
   buildVaccMenu();
-  renderStats();
-  render();
+  // Re-fetch depuis Supabase avec le filtre côté serveur
+  await charger();
 }
 
 document.addEventListener('click',e=>{
@@ -305,9 +325,14 @@ document.addEventListener('click',e=>{
 })
 
 function renderStats(){
+  const counts={draft:0,ready:0,posted:0,sold:0,pending_order:0};
+  for(let i=0;i<articles.length;i++) counts[articles[i].status]=(counts[articles[i].status]||0)+1;
   document.getElementById('sTotal').textContent=articles.length;
-  const map={draft:'sDraft',ready:'sReady',posted:'sPosted',sold:'sSold',pending_order:'sPending'};
-  for(const s in map) document.getElementById(map[s]).textContent=articles.filter(a=>a.status===s).length;
+  document.getElementById('sDraft').textContent=counts.draft;
+  document.getElementById('sReady').textContent=counts.ready;
+  document.getElementById('sPosted').textContent=counts.posted;
+  document.getElementById('sSold').textContent=counts.sold;
+  document.getElementById('sPending').textContent=counts.pending_order;
 }
 
 /* ===== RENDER : génère le HTML d'UNE ligne (réutilisable pour patch) ===== */
@@ -350,23 +375,63 @@ function patchRow(id){
   tr.replaceWith(tmp.firstElementChild);
 }
 
-function render(){
-  let list=articles.slice();
+/* ===== FILTRAGE : retourne la liste filtrée ===== */
+function getFilteredList(){
+  let list=articles;
   const q=document.getElementById('search').value.toLowerCase().trim();
-  if(q)list=list.filter(a=>(a.title||'').toLowerCase().includes(q)||(a.color||'').toLowerCase().includes(q)||(a.supplier_url||'').toLowerCase().includes(q));
-  if(activeVaccId)list=list.filter(a=>a.vinted_account_id===activeVaccId);
-  if(filtre!=='all')list=list.filter(a=>a.status===filtre);
+  if(q) list=list.filter(a=>(a.title||'').toLowerCase().includes(q)||(a.color||'').toLowerCase().includes(q)||(a.supplier_url||'').toLowerCase().includes(q));
+  if(activeVaccId) list=list.filter(a=>a.vinted_account_id===activeVaccId);
+  if(filtre!=='all') list=list.filter(a=>a.status===filtre);
+  return list;
+}
 
+/* ===== RENDER RAPIDE : rendu par lots pour switch instantané ===== */
+const FAST_BATCH=15; // premières lignes rendues instantanément
+
+function renderFast(){
+  const list=getFilteredList();
+  const body=document.getElementById('tbody');
+  if(!list.length){body.innerHTML='<tr class="empty-row"><td colspan="11">Aucun résultat.</td></tr>';return}
+
+  const visible=list.slice(0,rowLimit);
+  const remaining=list.length-visible.length;
+
+  // Phase 1 : afficher les premières lignes IMMÉDIATEMENT
+  const batch1=visible.slice(0,FAST_BATCH);
+  const batch2=visible.slice(FAST_BATCH);
+
+  const tmp=document.createElement('tbody');
+  tmp.innerHTML=batch1.map(renderRow).join('');
+  const frag=document.createDocumentFragment();
+  while(tmp.firstChild) frag.appendChild(tmp.firstChild);
+  body.textContent='';
+  body.appendChild(frag);
+
+  // Phase 2 : ajouter le reste après le premier paint (non bloquant)
+  if(batch2.length || remaining>0){
+    requestAnimationFrame(()=>{
+      const tmp2=document.createElement('tbody');
+      let extra=batch2.map(renderRow).join('');
+      if(remaining>0) extra+=`<tr class="show-more-row"><td colspan="11"><button class="show-more-btn" onclick="showMoreRows()">Voir ${remaining} ligne${remaining>1?'s':''} de plus…</button></td></tr>`;
+      tmp2.innerHTML=extra;
+      const frag2=document.createDocumentFragment();
+      while(tmp2.firstChild) frag2.appendChild(tmp2.firstChild);
+      body.appendChild(frag2);
+    });
+  }
+}
+
+function render(){
+  const list=getFilteredList();
   const body=document.getElementById('tbody');
   if(!list.length){body.innerHTML='<tr class="empty-row"><td colspan="11">Aucun résultat.</td></tr>';return}
   const visible=list.slice(0,rowLimit);
   const remaining=list.length-visible.length;
-  // Use DocumentFragment for faster DOM insertion
-  const frag=document.createDocumentFragment();
   const tmp=document.createElement('tbody');
   tmp.innerHTML=visible.map(renderRow).join('')+(remaining>0?`<tr class="show-more-row"><td colspan="11"><button class="show-more-btn" onclick="showMoreRows()">Voir ${remaining} ligne${remaining>1?'s':''} de plus…</button></td></tr>`:'');
+  const frag=document.createDocumentFragment();
   while(tmp.firstChild) frag.appendChild(tmp.firstChild);
-  body.textContent=''; // fast clear
+  body.textContent='';
   body.appendChild(frag);
 }
 
