@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VinDrop — Fiche</title>
+<title>Vintify — Fiche</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="auth.js"></script>
@@ -196,14 +196,45 @@ textarea{min-height:100px;resize:vertical}
 
 @media(max-width:1100px){.dashboard{grid-template-columns:1fr}.counters{grid-template-rows:1fr;grid-template-columns:repeat(4,1fr)}}
 @media(max-width:900px){.kanban{grid-template-columns:1fr}.modal-grid{grid-template-columns:1fr}.counters{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr)}}
-@media(max-width:600px){nav{flex-direction:column;align-items:flex-start}.toolbar{flex-direction:column;align-items:stretch}.vacc-menu{min-width:180px}}
+@media(max-width:600px){
+  html,body{-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+  body{overflow:auto}
+  main{padding:12px;gap:12px;overflow:visible}
+  nav{flex-direction:column;align-items:flex-start;padding:10px 14px}
+  .toolbar{flex-direction:column;align-items:stretch;padding:10px 14px;gap:6px}
+  .toolbar .btn,.tb-select,.search input{min-height:44px;font-size:.9rem}
+  .vacc-menu{min-width:180px}
+  /* Cartes stats compactes */
+  .counters{grid-template-columns:repeat(2,1fr);gap:6px}
+  .counter{padding:9px 10px;gap:8px}
+  .counter .c-icon{font-size:1.1rem}
+  .counter .c-val{font-size:1.1rem}
+  .counter .c-lbl{font-size:.6rem}
+  /* Dashboard */
+  .progress-card{padding:14px}
+  .progress-head .pct{font-size:1.3rem}
+  .btn-cta,.btn-focus{padding:13px 14px;font-size:.85rem}
+  /* Kanban : columns en pile, hauteur libre */
+  .kanban{grid-template-columns:1fr;flex:none}
+  .col{min-height:auto}
+  .col-list{max-height:none;overflow:visible}
+  /* Boutons tap-friendly */
+  .btn{min-height:42px;padding:10px 13px}
+  .btn-mark-posted{padding:8px 12px;font-size:.72rem;min-height:36px}
+  /* Modal full-screen sur mobile */
+  .modal{padding:18px;border-radius:14px}
+  .modal-section{padding:12px}
+  /* Anim courtes */
+  *,*::before,*::after{animation-duration:.2s !important;transition-duration:.2s !important}
+  .prod{padding:10px}
+}
 </style>
 </head>
 <body>
 
 <header class="app-header">
   <nav>
-    <div class="brand"><div class="brand-dot">V</div><div><h1>VinDrop</h1><span>Fiches Vinted</span></div></div>
+    <div class="brand"><div class="brand-dot">V</div><div><h1>Vintify</h1><span>Fiches Vinted</span></div></div>
     <div class="nav-mid" id="navMid">
       <a href="equipe.html" class="active">Fiche</a>
       <a href="suivi.html">Suivi</a>
@@ -319,7 +350,6 @@ let articles=[],vaccs=[],employees=[],current=null,uploadedImgs=[],profile=null;
 let isFocus=false, focusQueue=[], focusIdx=0;
 let activeVaccId='';
 let lastPromotedId=null;
-const DAILY_GOAL=20;
 const CARDS_PER_PAGE=50;
 let draftLimit=CARDS_PER_PAGE, readyLimit=CARDS_PER_PAGE;
 
@@ -335,7 +365,6 @@ requireAuth(['admin','employee']).then(p=>{
     document.getElementById('navMid').insertAdjacentHTML('afterbegin','<a href="admin.html">Admin</a>');
     document.getElementById('fEmp').style.display='';
   }
-  document.getElementById('cGoal').textContent=DAILY_GOAL;
   initDropzone();
   init();
 });
@@ -466,6 +495,7 @@ function render(){
   document.getElementById('cRest').textContent=rest;
   document.getElementById('cDone').textContent=done;
   document.getElementById('cToday').textContent=getTodayCount();
+  document.getElementById('cGoal').textContent=total; // objectif dynamique = total réel des fiches
   document.getElementById('cntDraft').textContent=rest;
   document.getElementById('cntReady').textContent=done;
 

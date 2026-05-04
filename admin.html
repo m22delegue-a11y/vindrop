@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VinDrop — Admin</title>
+<title>Vintify — Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="config.js"></script>
@@ -90,12 +90,24 @@ tbody tr:hover{background:rgba(248,250,252,.8)}
 .modal-close{position:absolute;top:14px;right:14px;border:none;background:var(--page);width:30px;height:30px;border-radius:10px;cursor:pointer;font-size:1rem}
 @media(max-width:1200px){.grid-top{grid-template-columns:1fr 1fr}}
 @media(max-width:800px){.stats{grid-template-columns:repeat(3,1fr)}.grid-top{grid-template-columns:1fr}}
-@media(max-width:600px){nav{flex-direction:column;align-items:flex-start}}
+@media(max-width:600px){
+  html,body{-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
+  nav{flex-direction:column;align-items:flex-start;padding:10px 14px}
+  main{padding:12px;gap:10px}
+  .grid-top{grid-template-columns:1fr;gap:10px}
+  .card{padding:14px}
+  input,select,textarea,.btn{min-height:44px;font-size:.9rem}
+  .btn{padding:11px 14px}
+  .csv-dropzone{padding:18px 12px;font-size:.85rem}
+  .list-card{max-height:none}
+  /* Anim courtes */
+  *,*::before,*::after{animation-duration:.2s !important;transition-duration:.2s !important}
+}
 </style>
 </head>
 <body>
 <nav>
-  <div class="brand"><div class="brand-dot">V</div><div><h1>VinDrop</h1><span>Admin</span></div></div>
+  <div class="brand"><div class="brand-dot">V</div><div><h1>Vintify</h1><span>Admin</span></div></div>
   <div class="nav-mid">
     <a href="admin.html" class="active">Admin</a>
     <a href="equipe.html">Fiche</a>

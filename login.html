@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VinDrop — Connexion</title>
+<title>Vintify — Connexion</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="config.js"></script>
 <script src="auth.js"></script>
@@ -24,12 +24,23 @@ button{width:100%;padding:12px;border:none;border-radius:10px;background:linear-
 button:hover{transform:translateY(-1px)}
 button:disabled{opacity:.6;cursor:not-allowed}
 .err{color:#ef4444;font-size:.8rem;margin-top:10px;min-height:1em;text-align:center}
+.role-toggle{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#f1f5f9;padding:4px;border-radius:12px;margin-bottom:16px;border:1px solid #e2e8f0}
+.role-toggle label{display:flex;align-items:center;justify-content:center;gap:6px;padding:9px;border-radius:9px;cursor:pointer;font-size:.82rem;font-weight:600;color:#64748b;margin:0;transition:all .2s}
+.role-toggle input{display:none}
+.role-toggle input:checked + label{background:#fff;color:#0f172a;box-shadow:0 2px 8px -2px rgba(15,23,42,.1)}
+@media(max-width:480px){.box{padding:24px 20px}input,button{padding:13px}button{font-size:.95rem}.role-toggle label{padding:11px}}
 </style>
 </head>
 <body>
 <form class="box" onsubmit="event.preventDefault();go()">
-  <div class="brand"><div class="brand-dot">V</div><div><h1>VinDrop</h1><span>Espace privé</span></div></div>
+  <div class="brand"><div class="brand-dot">V</div><div><h1>Vintify</h1><span>Espace privé</span></div></div>
   <h2>🔐 Connexion</h2>
+  <div class="role-toggle">
+    <input type="radio" id="rEmp" name="role" value="employee" checked>
+    <label for="rEmp">👤 Employé</label>
+    <input type="radio" id="rAdm" name="role" value="admin">
+    <label for="rAdm">🛠 Admin</label>
+  </div>
   <label>Email</label><input id="em" type="email" required autofocus>
   <label>Mot de passe</label><input id="pw" type="password" required>
   <label style="display:flex;align-items:center;gap:8px;font-weight:500;font-size:.82rem;margin:4px 0 14px;cursor:pointer;color:#475569"><input id="remember" type="checkbox" checked style="width:auto;margin:0;cursor:pointer"> Se souvenir de moi</label>
@@ -43,6 +54,8 @@ async function go(){
   btn.disabled=true;btn.textContent='Connexion…';
   try{
     const remember=document.getElementById('remember').checked;
+    const selectedRole=document.querySelector('input[name="role"]:checked').value;
+    localStorage.setItem('role', selectedRole);
     localStorage.setItem('vd_remember', remember?'1':'0');
     sessionStorage.setItem('vd_alive','1');
     await login(document.getElementById('em').value, document.getElementById('pw').value);
@@ -54,6 +67,8 @@ async function go(){
     btn.disabled=false;btn.textContent='Se connecter';
   }
 }
+// Restaure le dernier rôle choisi (UX)
+(function(){const r=localStorage.getItem('role');if(r==='admin'){const el=document.getElementById('rAdm');if(el)el.checked=true}})();
 // déjà connecté ? skip login (sauf si "Se souvenir de moi" était décoché et nouvelle session)
 (async()=>{
   if(localStorage.getItem('vd_remember')==='0' && !sessionStorage.getItem('vd_alive')){
