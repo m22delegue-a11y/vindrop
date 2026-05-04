@@ -308,6 +308,46 @@ function renderStats(){
   for(const s in map) document.getElementById(map[s]).textContent=articles.filter(a=>a.status===s).length;
 }
 
+/* ===== RENDER : génère le HTML d'UNE ligne (réutilisable pour patch) ===== */
+function renderRow(a){
+  const name=a.title||hostName(a.supplier_url||'');
+  const img=a.images[0]||'';
+  const tag=`<span class="tag ${STATUS_TAG[a.status]||'amber'}">${STATUS_LABEL[a.status]||a.status}</span>`;
+  const vaccName=a.vinted_account?esc(a.vinted_account.name):'<span style="color:var(--muted)">—</span>';
+  const brdCell = a.prolonged
+    ? (a.bordereau&&a.bordereau.src
+        ? `<a href="${esc(a.bordereau.src)}" download="${esc(a.bordereau.name||'bordereau.pdf')}" class="btn btn-ghost" style="font-size:.7rem">⬇ PDF</a> <button class="btn btn-ghost" style="font-size:.7rem" onclick="openBrd('${a.id}')" title="Remplacer">✏️</button>`
+        : `<button class="btn btn-border" style="font-size:.7rem" onclick="openBrd('${a.id}')">📎 Importer</button>`)
+    : '<span style="color:var(--muted)">—</span>';
+  return`<tr data-id="${a.id}">
+    <td><div class="photo-cell">${img?`<img src="${esc(img)}" loading="lazy" onerror="this.outerHTML='<div class=ph>?</div>'">`:"<div class=\"ph\">?</div>"} ${a.images.length>1?`<span class="cnt">${a.images.length}</span>`:''}</div></td>
+    <td><div class="title-cell"><strong>${esc(name)}</strong><span>${esc(a.size||'—')} · ${esc(a.color||'—')}${a.brand?' · '+esc(a.brand):''}</span></div></td>
+    <td>${vaccName}</td>
+    <td><div style="display:grid;gap:3px"><span class="tag green">${a.price||0} €</span>${a.min_price?`<span class="tag amber">Min ${a.min_price} €</span>`:''}</div></td>
+    <td>${tag}</td>
+    <td><input type="checkbox" class="chk" ${(a.status==='posted'||a.status==='sold'||a.status==='pending_order')?'checked':''} onchange="togglePosted('${a.id}',this.checked)"></td>
+    <td><input type="checkbox" class="chk green" ${a.status==='sold'?'checked':''} onchange="toggleSold('${a.id}',this.checked)"></td>
+    <td><input type="checkbox" class="chk amber" ${a.prolonged?'checked':''} onchange="togglePending('${a.id}',this.checked)"></td>
+    <td><input type="checkbox" class="chk" ${a.warehouse?'checked':''} onchange="toggleField('${a.id}','warehouse',this.checked)"></td>
+    <td>${brdCell}</td>
+    <td><div class="row-acts">
+      ${a.supplier_url?`<a href="${esc(a.supplier_url)}" target="_blank" class="btn btn-ghost" style="font-size:.7rem" title="Lien fournisseur">🔗</a>`:''}
+      <a href="equipe.html?id=${a.id}" class="btn btn-fiche" style="font-size:.7rem">📝 Fiche</a>
+      ${profile&&profile.role==='admin'?`<button class="btn btn-danger" style="font-size:.7rem" onclick="supprimer('${a.id}')">✕</button>`:''}
+    </div></td>
+  </tr>`;
+}
+
+/* ===== PATCH : remplace UNE ligne au lieu de tout re-render ===== */
+function patchRow(id){
+  const a=articles.find(x=>x.id===id);
+  const tr=document.querySelector(`tr[data-id="${id}"]`);
+  if(!a||!tr)return;
+  const tmp=document.createElement('tbody');
+  tmp.innerHTML=renderRow(a);
+  tr.replaceWith(tmp.firstElementChild);
+}
+
 function render(){
   let list=articles.slice();
   const q=document.getElementById('search').value.toLowerCase().trim();
@@ -319,33 +359,7 @@ function render(){
   if(!list.length){body.innerHTML='<tr class="empty-row"><td colspan="11">Aucun résultat.</td></tr>';return}
   const visible=list.slice(0,rowLimit);
   const remaining=list.length-visible.length;
-  let html=visible.map(a=>{
-    const name=a.title||hostName(a.supplier_url||'');
-    const img=a.images[0]||'';
-    const tag=`<span class="tag ${STATUS_TAG[a.status]||'amber'}">${STATUS_LABEL[a.status]||a.status}</span>`;
-    const vaccName=a.vinted_account?esc(a.vinted_account.name):'<span style="color:var(--muted)">—</span>';
-    const brdCell = a.prolonged
-      ? (a.bordereau&&a.bordereau.src
-          ? `<a href="${esc(a.bordereau.src)}" download="${esc(a.bordereau.name||'bordereau.pdf')}" class="btn btn-ghost" style="font-size:.7rem">⬇ PDF</a> <button class="btn btn-ghost" style="font-size:.7rem" onclick="openBrd('${a.id}')" title="Remplacer">✏️</button>`
-          : `<button class="btn btn-border" style="font-size:.7rem" onclick="openBrd('${a.id}')">📎 Importer</button>`)
-      : '<span style="color:var(--muted)">—</span>';
-    return`<tr>
-      <td><div class="photo-cell">${img?`<img src="${esc(img)}" loading="lazy" onerror="this.outerHTML='<div class=ph>?</div>'">`:"<div class=\"ph\">?</div>"} ${a.images.length>1?`<span class="cnt">${a.images.length}</span>`:''}</div></td>
-      <td><div class="title-cell"><strong>${esc(name)}</strong><span>${esc(a.size||'—')} · ${esc(a.color||'—')}${a.brand?' · '+esc(a.brand):''}</span></div></td>
-      <td>${vaccName}</td>
-      <td><div style="display:grid;gap:3px"><span class="tag green">${a.price||0} €</span>${a.min_price?`<span class="tag amber">Min ${a.min_price} €</span>`:''}</div></td>
-      <td>${tag}</td>
-      <td><input type="checkbox" class="chk" ${(a.status==='posted'||a.status==='sold'||a.status==='pending_order')?'checked':''} onchange="togglePosted('${a.id}',this.checked)"></td>
-      <td><input type="checkbox" class="chk green" ${a.status==='sold'?'checked':''} onchange="toggleSold('${a.id}',this.checked)"></td>
-      <td><input type="checkbox" class="chk amber" ${a.prolonged?'checked':''} onchange="togglePending('${a.id}',this.checked)"></td>
-      <td><input type="checkbox" class="chk" ${a.warehouse?'checked':''} onchange="toggleField('${a.id}','warehouse',this.checked)"></td>
-      <td>${brdCell}</td>
-      <td><div class="row-acts">
-        ${a.supplier_url?`<a href="${esc(a.supplier_url)}" target="_blank" class="btn btn-ghost" style="font-size:.7rem" title="Lien fournisseur">🔗</a>`:''}
-        <a href="equipe.html?id=${a.id}" class="btn btn-fiche" style="font-size:.7rem">📝 Fiche</a>
-        ${profile&&profile.role==='admin'?`<button class="btn btn-danger" style="font-size:.7rem" onclick="supprimer('${a.id}')">✕</button>`:''}
-      </div></td>
-    </tr>`}).join('');
+  let html=visible.map(renderRow).join('');
   if(remaining>0){
     html+=`<tr class="show-more-row"><td colspan="11"><button class="show-more-btn" onclick="showMoreRows()">Voir ${remaining} ligne${remaining>1?'s':''} de plus…</button></td></tr>`;
   }
@@ -357,74 +371,99 @@ function showMoreRows(){
   render();
 }
 
+/* ===== OPTIMISTIC TOGGLES : update local + patch DOM, sync DB en arrière-plan ===== */
 async function togglePosted(id,checked){
-  const art=articles.find(a=>a.id===id);
-  if(!art)return;
-  if(!checked && (art.status==='sold'||art.status==='pending_order')){
+  const a=articles.find(x=>x.id===id);
+  if(!a)return;
+  if(!checked && (a.status==='sold'||a.status==='pending_order')){
     toast('Décoche d\'abord "Vendu"',true);
-    charger();
+    patchRow(id); // revert visuel checkbox
     return;
   }
-  const newStatus=checked?'posted':'ready';
-  const{error}=await sb.from('articles').update({status:newStatus}).eq('id',id);
-  if(error){toast('Erreur: '+error.message,true);return}
-  toast(checked?'Posté ✓':'Repassé en prêt');
-  charger();
+  const oldStatus=a.status;
+  a.status=checked?'posted':'ready';
+  patchRow(id); renderStats();
+  const{error}=await sb.from('articles').update({status:a.status}).eq('id',id);
+  if(error){a.status=oldStatus;patchRow(id);renderStats();toast('Erreur: '+error.message,true);return}
 }
 
-async function toggleSold(id,checked){
-  const art=articles.find(a=>a.id===id);
-  if(!art)return;
-  const newStatus=checked?'sold':'posted';
-  const{error}=await sb.from('articles').update({status:newStatus}).eq('id',id);
-  if(error){toast('Erreur: '+error.message,true);return}
-  if(checked && art.status!=='sold'){
-    const dup={
-      title:art.title,description:art.description,brand:art.brand,
-      price:art.price,min_price:art.min_price,size:art.size,color:art.color,
-      supplier_url:art.supplier_url,
-      vinted_account_id:art.vinted_account_id,
-      images:art.images,
-      status:'draft', bordereau:null
-    };
-    const{error:e2}=await sb.from('articles').insert(dup);
-    if(e2){toast('Vendu OK, mais erreur duplication: '+e2.message,true);charger();return}
-    toast('Vendu ✓ — Copie créée pour reposter');
-  } else {
-    toast(checked?'Vendu ✓':'Vente annulée');
-  }
-  charger();
+async function togglePending(id,checked){
+  const a=articles.find(x=>x.id===id);
+  if(!a)return;
+  const oldP=a.prolonged, oldS=a.status;
+  a.prolonged=checked;
+  if(checked) a.status='pending_order';
+  else if(a.status==='pending_order') a.status='sold';
+  patchRow(id); renderStats();
+  const{error}=await sb.from('articles').update({prolonged:a.prolonged,status:a.status}).eq('id',id);
+  if(error){a.prolonged=oldP;a.status=oldS;patchRow(id);renderStats();toast('Erreur: '+error.message,true);return}
 }
 
 async function toggleField(id,field,val){
+  const a=articles.find(x=>x.id===id);
+  if(!a)return;
+  const old=a[field];
+  a[field]=val;
+  patchRow(id);
   const{error}=await sb.from('articles').update({[field]:val}).eq('id',id);
-  if(error){toast('Erreur: '+error.message,true);return}
-  toast(field+' → '+(val?'oui':'non'));charger();
+  if(error){a[field]=old;patchRow(id);toast('Erreur: '+error.message,true);return}
 }
 
-// Prolonger : met à jour à la fois le flag boolean ET le status pour que
-// le compteur "Prolonger" (basé sur status='pending_order') reste synchronisé.
-async function togglePending(id,checked){
-  const art=articles.find(a=>a.id===id);
-  if(!art)return;
-  const updates={prolonged:checked};
-  if(checked){
-    updates.status='pending_order';
-  } else if(art.status==='pending_order'){
-    // On revient à l'état logique précédent (sold = état avant prolongation typique)
-    updates.status='sold';
+async function toggleSold(id,checked){
+  const a=articles.find(x=>x.id===id);
+  if(!a)return;
+  const oldStatus=a.status;
+  a.status=checked?'sold':'posted';
+  patchRow(id); renderStats();
+  const{error}=await sb.from('articles').update({status:a.status}).eq('id',id);
+  if(error){a.status=oldStatus;patchRow(id);renderStats();toast('Erreur: '+error.message,true);return}
+  // Duplication uniquement quand on coche "Vendu"
+  if(checked && oldStatus!=='sold'){
+    const dup={
+      title:a.title,description:a.description,brand:a.brand,
+      price:a.price,min_price:a.min_price,size:a.size,color:a.color,
+      supplier_url:a.supplier_url,vinted_account_id:a.vinted_account_id,
+      images:a.images,status:'draft',bordereau:null
+    };
+    const{data:newRow,error:e2}=await sb.from('articles')
+      .insert(dup)
+      .select('id,title,description,brand,price,min_price,size,color,supplier_url,images,status,prolonged,warehouse,bordereau,vinted_account_id,created_at, vinted_account:vinted_accounts!vinted_account_id(id,name)')
+      .single();
+    if(e2){toast('Vendu OK — erreur duplication: '+e2.message,true);return}
+    if(newRow){
+      const dupArt={...newRow,images:Array.isArray(newRow.images)?newRow.images:[]};
+      articles.unshift(dupArt);
+      // Insert le nouveau <tr> en haut sans toucher aux autres
+      const tbody=document.getElementById('tbody');
+      const tmp=document.createElement('tbody');
+      tmp.innerHTML=renderRow(dupArt);
+      const firstEmpty=tbody.querySelector('.empty-row');
+      if(firstEmpty) firstEmpty.remove();
+      tbody.insertBefore(tmp.firstElementChild,tbody.firstElementChild);
+      renderStats(); buildVaccMenu();
+      toast('Vendu ✓ — Copie créée pour reposter');
+    }
+  } else {
+    toast(checked?'Vendu ✓':'Vente annulée');
   }
-  const{error}=await sb.from('articles').update(updates).eq('id',id);
-  if(error){toast('Erreur: '+error.message,true);return}
-  toast(checked?'Prolonger ✓':'Prolongement annulé');
-  charger();
 }
 
 async function supprimer(id){
   if(!confirm('Supprimer ce produit ?'))return;
+  // Optimistic : retire du DOM et de l'array immédiatement
+  const tr=document.querySelector(`tr[data-id="${id}"]`);
+  const idx=articles.findIndex(a=>a.id===id);
+  const backup=idx>=0?articles[idx]:null;
+  if(tr) tr.remove();
+  if(idx>=0) articles.splice(idx,1);
+  renderStats(); buildVaccMenu();
   const{error}=await sb.from('articles').delete().eq('id',id);
-  if(error){toast('Erreur: '+error.message,true);return}
-  toast('Supprimé');charger();
+  if(error){
+    // Rollback
+    if(backup){articles.splice(idx,0,backup);render();renderStats();buildVaccMenu()}
+    toast('Erreur: '+error.message,true);return;
+  }
+  toast('Supprimé ✓');
 }
 
 /* === BORDEREAU === */
@@ -463,11 +502,16 @@ async function saveBordereau(){
   if(!brdArticleId)return;
   const art=articles.find(a=>a.id===brdArticleId);if(!art)return;
   const btn=document.getElementById('brdSaveBtn');btn.textContent='Enregistrement...';btn.disabled=true;
+  const oldBrd=art.bordereau;
   const newBrd=brdFile||art.bordereau;
+  // Optimistic
+  art.bordereau=newBrd;
+  patchRow(art.id);
+  closeBrd();
+  toast('Bordereau enregistré ✓');
   const{error}=await sb.from('articles').update({bordereau:newBrd}).eq('id',brdArticleId);
   btn.textContent='💾 Enregistrer';btn.disabled=false;
-  if(error){toast('Erreur: '+error.message,true);return}
-  toast('Bordereau enregistré ✓');closeBrd();charger();
+  if(error){art.bordereau=oldBrd;patchRow(art.id);toast('Erreur: '+error.message,true)}
 }
 </script>
 </body>

@@ -694,26 +694,33 @@ async function sauvegarder(silent){
   const title=document.getElementById('mTitre').value.trim();
   const desc=document.getElementById('mDesc').value.trim();
   const brand=document.getElementById('mMarque').value.trim();
-  // wasComplete = état "prête" basé sur les 3 champs actuels en DB (pas le status)
   const wasComplete=isReadyFiche(current);
   const willBeComplete=uploadedImgs.length>0 && !!title && !!desc;
   const fields={title:title||null,description:desc||null,brand:brand||null,images:uploadedImgs};
-  // Sync status avec la complétion
   if(willBeComplete && current.status!=='ready') fields.status='ready';
   else if(!willBeComplete && current.status==='ready') fields.status='draft';
-  const{error}=await sb.from('articles').update(fields).eq('id',current.id);
-  if(btn && !silent){btn.textContent='💾 Enregistrer';btn.disabled=false}
-  if(error){toast('Erreur: '+error.message,true);return}
-  // Promotion : la fiche passe de "à traiter" à "prête"
+  // Optimistic : on met à jour l'objet local AVANT le call DB pour un re-render instantané
+  const backup={title:current.title,description:current.description,brand:current.brand,images:current.images.slice(),status:current.status};
+  Object.assign(current,fields);
+  current.images=uploadedImgs.slice();
   const justPromoted = !wasComplete && willBeComplete;
   if(justPromoted){
     lastPromotedId=current.id;
     bumpDailyDone();
     document.getElementById('cToday').textContent=getTodayCount();
-    // Clear le flag d'animation après que l'animation ait joué
     setTimeout(()=>{lastPromotedId=null},700);
   }
-  if(!silent){toast(justPromoted?'🎉 Fiche prête !':'Fiche sauvegardée ✓','success');closeModal();charger()}
+  if(!silent){toast(justPromoted?'🎉 Fiche prête !':'Fiche sauvegardée ✓','success');closeModal();render()}
+  // Sync DB en arrière-plan
+  const{error}=await sb.from('articles').update(fields).eq('id',current?current.id:backup.id);
+  if(btn && !silent){btn.textContent='💾 Enregistrer';btn.disabled=false}
+  if(error){
+    // Rollback local + re-render
+    const target=articles.find(x=>x.id===(current?current.id:null));
+    if(target){Object.assign(target,backup)}
+    render();
+    toast('Erreur: '+error.message,true);
+  }
 }
 
 /* ===== MARK AS POSTED ===== */
