@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VinDrop — Connexion</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;font-family:'Inter',system-ui,sans-serif;color:#0f172a;background:#f8fafc;background-image:radial-gradient(at 0% 0%,hsla(253,16%,7%,.04) 0,transparent 50%),radial-gradient(at 100% 100%,hsla(225,39%,30%,.05) 0,transparent 50%);display:grid;place-items:center;padding:14px}
+.box{background:#fff;padding:32px;border-radius:20px;box-shadow:0 24px 48px -12px rgba(15,23,42,.12);width:min(380px,100%)}
+.brand{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+.brand-dot{width:34px;height:34px;border-radius:11px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:grid;place-items:center;color:#fff;font-weight:800}
+.brand h1{font-family:'Outfit',sans-serif;font-size:1.15rem;font-weight:700}
+.brand span{font-size:.72rem;color:#64748b;display:block}
+h2{font-family:'Outfit',sans-serif;font-size:1.3rem;margin-bottom:18px;letter-spacing:-.02em}
+label{display:block;font-size:.72rem;font-weight:600;margin-bottom:4px;color:#0f172a}
+input{width:100%;padding:11px;border:1px solid #e2e8f0;border-radius:10px;margin-bottom:12px;font-size:.88rem;font-family:inherit;outline:none;transition:all .2s}
+input:focus{border-color:#6366f1;box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+button{width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;font-weight:600;cursor:pointer;font-size:.9rem;font-family:inherit;box-shadow:0 12px 32px -8px rgba(99,102,241,.4);transition:transform .15s}
+button:hover{transform:translateY(-1px)}
+button:disabled{opacity:.6;cursor:not-allowed}
+.err{color:#ef4444;font-size:.8rem;margin-top:10px;min-height:1em;text-align:center}
+</style>
+</head>
+<body>
+<form class="box" onsubmit="event.preventDefault();go()">
+  <div class="brand"><div class="brand-dot">V</div><div><h1>VinDrop</h1><span>Espace privé</span></div></div>
+  <h2>🔐 Connexion</h2>
+  <label>Email</label><input id="em" type="email" required autofocus>
+  <label>Mot de passe</label><input id="pw" type="password" required>
+  <label style="display:flex;align-items:center;gap:8px;font-weight:500;font-size:.82rem;margin:4px 0 14px;cursor:pointer;color:#475569"><input id="remember" type="checkbox" checked style="width:auto;margin:0;cursor:pointer"> Se souvenir de moi</label>
+  <button id="btn">Se connecter</button>
+  <div class="err" id="err"></div>
+</form>
+<script>
+async function go(){
+  const btn=document.getElementById('btn');
+  document.getElementById('err').textContent='';
+  btn.disabled=true;btn.textContent='Connexion…';
+  try{
+    const remember=document.getElementById('remember').checked;
+    localStorage.setItem('vd_remember', remember?'1':'0');
+    sessionStorage.setItem('vd_alive','1');
+    await login(document.getElementById('em').value, document.getElementById('pw').value);
+    const p=await getProfile();
+    if(!p){document.getElementById('err').textContent='Profil introuvable';btn.disabled=false;btn.textContent='Se connecter';return}
+    location.href = p.role==='admin' ? 'admin.html' : 'equipe.html';
+  }catch(e){
+    document.getElementById('err').textContent=e.message;
+    btn.disabled=false;btn.textContent='Se connecter';
+  }
+}
+// déjà connecté ? skip login (sauf si "Se souvenir de moi" était décoché et nouvelle session)
+(async()=>{
+  if(localStorage.getItem('vd_remember')==='0' && !sessionStorage.getItem('vd_alive')){
+    await sb.auth.signOut();
+    return;
+  }
+  const p=await getProfile();
+  if(p){
+    sessionStorage.setItem('vd_alive','1');
+    location.href = p.role==='admin'?'admin.html':'equipe.html';
+  }
+})();
+</script>
+</body>
+</html>

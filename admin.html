@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VinDrop — Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--page:#f8fafc;--card:rgba(255,255,255,.82);--line:#e2e8f0;--ink:#0f172a;--muted:#64748b;--dark:#0f172a;--primary:#6366f1;--good:#10b981;--warn:#f59e0b;--bad:#ef4444;--shadow-s:0 4px 20px -6px rgba(15,23,42,.07);--shadow-m:0 12px 32px -8px rgba(99,102,241,.18)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{min-height:100vh;font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:var(--page)}
+h1,h2,h3,h4,.stat-val{font-family:'Outfit',sans-serif}
+nav{position:sticky;top:10px;z-index:10;max-width:1500px;margin:14px auto 0;padding:10px 18px;border:1px solid rgba(255,255,255,.8);border-radius:18px;background:rgba(255,255,255,.6);backdrop-filter:blur(24px);box-shadow:var(--shadow-s);display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-dot{width:28px;height:28px;border-radius:10px;background:linear-gradient(135deg,var(--primary),#8b5cf6);display:grid;place-items:center;color:#fff;font-weight:800;font-size:.75rem}
+.brand h1{font-size:1.05rem;font-weight:700}
+.brand span{font-size:.72rem;color:var(--muted)}
+.nav-mid{display:flex;gap:4px;background:rgba(248,250,252,.8);padding:3px;border-radius:14px;border:1px solid var(--line)}
+.nav-mid a{font-size:.8rem;font-weight:600;text-decoration:none;padding:7px 14px;border-radius:11px;color:var(--muted)}
+.nav-mid a.active{background:var(--dark);color:#fff}
+.nav-end{display:flex;align-items:center;gap:8px}
+.nav-end .who{font-size:.72rem;color:var(--muted)}
+main{max-width:1500px;margin:18px auto 0;padding:0 14px 30px}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:14px}
+.stat{background:var(--card);border:1px solid #fff;border-radius:16px;padding:12px 14px;box-shadow:var(--shadow-s)}
+.stat-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;font-weight:600;color:var(--muted)}
+.stat-val{font-size:1.5rem;font-weight:800;letter-spacing:-.03em;margin-top:3px}
+.stat.amber .stat-val{color:var(--warn)}.stat.purple .stat-val{color:var(--primary)}.stat.blue .stat-val{color:#3b82f6}.stat.green .stat-val{color:var(--good)}.stat.red .stat-val{color:var(--bad)}
+.grid-top{display:grid;grid-template-columns:1fr 1.3fr 1.3fr;gap:14px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid #fff;border-radius:18px;padding:18px;box-shadow:var(--shadow-s)}
+.card h3{font-size:1rem;margin-bottom:12px}
+.field{margin-bottom:10px}
+label{display:block;font-size:.72rem;font-weight:600;margin-bottom:4px}
+input,select,textarea{width:100%;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:9px 11px;font-size:.82rem;font-family:inherit;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.btn{border:none;border-radius:10px;padding:9px 14px;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;justify-content:center;transition:transform .15s}
+.btn:hover{transform:translateY(-1px)}
+.btn-primary{color:#fff;background:linear-gradient(135deg,var(--primary),#8b5cf6);box-shadow:var(--shadow-m)}
+.btn-ghost{color:var(--ink);background:#fff;border:1px solid var(--line)}
+.btn-danger{color:#991b1b;background:#fef2f2;border:1px solid #fecaca}
+.btn-full{width:100%;padding:11px}
+.toolbar{display:flex;gap:8px;margin-bottom:12px;background:var(--card);border:1px solid #fff;border-radius:16px;padding:12px;flex-wrap:wrap;box-shadow:var(--shadow-s)}
+.toolbar input{flex:1;min-width:200px}
+.filters{display:flex;gap:4px;background:var(--page);padding:3px;border-radius:12px;border:1px solid var(--line);flex-wrap:wrap}
+.fbtn{border:none;cursor:pointer;border-radius:9px;padding:6px 10px;color:var(--muted);background:transparent;font-weight:600;font-size:.7rem;font-family:inherit}
+.fbtn.active{color:#fff;background:var(--dark)}
+.table-wrap{background:var(--card);border:1px solid #fff;border-radius:18px;overflow:hidden;box-shadow:var(--shadow-s)}
+.table-scroll{overflow-x:auto}
+table{width:100%;min-width:1100px;border-collapse:collapse}
+th,td{padding:10px;text-align:left;font-size:.78rem;vertical-align:middle}
+th{background:rgba(255,255,255,.98);color:var(--muted);text-transform:uppercase;font-size:.62rem;letter-spacing:.06em;border-bottom:1px solid var(--line);font-weight:700}
+tr{border-bottom:1px solid var(--line)}
+tbody tr:hover{background:rgba(248,250,252,.8)}
+.photo-cell img{width:40px;height:40px;border-radius:8px;object-fit:cover;border:1px solid var(--line)}
+.photo-cell .ph{width:40px;height:40px;border-radius:8px;background:var(--page);border:1px solid var(--line);display:grid;place-items:center;color:var(--muted)}
+.tag{border-radius:999px;padding:3px 8px;font-size:.62rem;font-weight:700;display:inline-flex}
+.tag.amber{color:#92400e;background:#fef3c7;border:1px solid #fde68a}
+.tag.purple{color:#5b21b6;background:#ede9fe;border:1px solid #c4b5fd}
+.tag.blue{color:#1e40af;background:#dbeafe;border:1px solid #bfdbfe}
+.tag.green{color:#065f46;background:#d1fae5;border:1px solid #a7f3d0}
+.tag.red{color:#991b1b;background:#fee2e2;border:1px solid #fecaca}
+.empty-row td{text-align:center;color:var(--muted);padding:24px}
+.banner{display:none;margin-bottom:14px;padding:12px 16px;border-radius:14px;background:#fef2f2;border:1px solid #fecaca;color:#991b1b;font-size:.8rem}
+#toast{position:fixed;bottom:20px;right:20px;background:var(--dark);color:#fff;padding:10px 18px;font-size:.8rem;border-radius:12px;font-weight:600;opacity:0;transform:translateY(16px);transition:all .35s;z-index:300}
+#toast.show{opacity:1;transform:translateY(0)}
+#toast.error{background:var(--bad)}
+.csv-dropzone{margin-top:10px;padding:16px 14px;border:2px dashed var(--line);border-radius:12px;text-align:center;cursor:pointer;transition:all .2s;background:rgba(255,255,255,.5);font-size:.78rem;color:var(--muted);user-select:none}
+.csv-dropzone:hover{border-color:var(--primary);background:rgba(99,102,241,.04);color:var(--ink)}
+.csv-dropzone.is-drag{border-color:var(--primary);background:rgba(99,102,241,.1);color:var(--primary);transform:scale(1.01)}
+.csv-dropzone.is-busy{border-style:solid;border-color:var(--primary);background:rgba(99,102,241,.06);color:var(--ink);pointer-events:none}
+.csv-dropzone .dz-text{font-weight:600;display:inline-flex;align-items:center;gap:8px}
+.csv-dropzone .dz-spin{display:inline-block;width:14px;height:14px;border:2px solid var(--line);border-top-color:var(--primary);border-radius:50%;animation:dzspin .8s linear infinite;flex-shrink:0}
+@keyframes dzspin{to{transform:rotate(360deg)}}
+.list-card{display:grid;gap:6px;margin-top:10px;max-height:240px;overflow:auto}
+.list-item{display:flex;justify-content:space-between;align-items:center;background:#fff;padding:8px 10px;border-radius:8px;border:1px solid var(--line);font-size:.78rem;gap:8px}
+.list-item small{color:var(--muted);font-size:.7rem}
+.list-item .acts{display:flex;gap:4px;align-items:center}
+.row-acts{display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.row-acts select{font-size:.7rem;padding:5px 8px;width:auto}
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.35);backdrop-filter:blur(10px);z-index:200;padding:14px}
+.overlay.open{display:flex}
+.modal-box{width:min(440px,100%);background:#fff;border-radius:20px;box-shadow:0 24px 48px -12px rgba(15,23,42,.2);padding:24px;position:relative}
+.modal-box h3{font-size:1.15rem;margin-bottom:6px}
+.modal-box .info{font-size:.75rem;color:var(--muted);margin-bottom:16px}
+.modal-close{position:absolute;top:14px;right:14px;border:none;background:var(--page);width:30px;height:30px;border-radius:10px;cursor:pointer;font-size:1rem}
+@media(max-width:1200px){.grid-top{grid-template-columns:1fr 1fr}}
+@media(max-width:800px){.stats{grid-template-columns:repeat(3,1fr)}.grid-top{grid-template-columns:1fr}}
+@media(max-width:600px){nav{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<nav>
+  <div class="brand"><div class="brand-dot">V</div><div><h1>VinDrop</h1><span>Admin</span></div></div>
+  <div class="nav-mid">
+    <a href="admin.html" class="active">Admin</a>
+    <a href="equipe.html">Fiche</a>
+    <a href="suivi.html">Suivi</a>
+  </div>
+  <div class="nav-end"><span class="who" id="who"></span><button class="btn btn-ghost" onclick="logout()">Déconnexion</button></div>
+</nav>
+
+<main>
+  <div id="cfgAlert" class="banner"></div>
+
+  <div class="grid-top">
+    <div class="card">
+      <h3>➕ Nouveau produit</h3>
+      <div class="field"><label>Lien fournisseur (Temu, AliExpress…)</label><input type="url" id="aLink" placeholder="https://temu.com/..."></div>
+      <div class="row2">
+        <div class="field"><label>Prix Vinted (€)</label><input type="number" step="0.01" id="aPrice"></div>
+        <div class="field"><label>Prix minimum (€)</label><input type="number" step="0.01" id="aMin"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Taille</label><input type="text" id="aSize" placeholder="Unique, M..."></div>
+        <div class="field"><label>Couleur</label><input type="text" id="aColor" placeholder="Multicolore..."></div>
+      </div>
+      <div class="field"><label>Compte Vinted</label><select id="aVacc"></select></div>
+      <button class="btn btn-primary btn-full" onclick="addArticle()">Ajouter le produit</button>
+      <div style="display:flex;gap:6px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)">
+        <button class="btn btn-ghost" style="flex:1" onclick="document.getElementById('csvInput').click()">📥 Importer (CSV / XLSX)</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="openTemplate()">📄 Template</button>
+        <input type="file" id="csvInput" accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" style="display:none" onchange="runImportFlow(this.files[0]);this.value=''">
+      </div>
+      <div id="csvDropzone" class="csv-dropzone"><span class="dz-text">📁 Dépose ton fichier CSV / XLSX ici ou clique pour importer</span></div>
+      <p style="font-size:.7rem;color:var(--muted);margin-top:6px;line-height:1.4">Formats acceptés : <code>.csv</code>, <code>.xlsx</code>. Le compte Vinted est défini par la colonne <code>vinted_account</code> (correspondance par nom).</p>
+    </div>
+
+    <div class="card">
+      <h3>🛍 Comptes Vinted</h3>
+      <div class="field"><label>Nom du compte</label><input type="text" id="vName" placeholder="COMPTA_X"></div>
+      <div class="field"><label>Assigné à</label><select id="vAssign"></select></div>
+      <button class="btn btn-primary btn-full" onclick="addVacc()">Créer le compte</button>
+      <div class="list-card" id="vaccList"></div>
+    </div>
+
+    <div class="card">
+      <h3>👥 Employés</h3>
+      <div class="field"><label>Nom</label><input type="text" id="eName"></div>
+      <div class="field"><label>Email</label><input type="email" id="eEmail"></div>
+      <div class="field"><label>Mot de passe</label><input type="text" id="ePassword" placeholder="min. 6 caractères"></div>
+      <button class="btn btn-primary btn-full" onclick="addEmployee()">Créer le compte</button>
+      <div class="list-card" id="empList"></div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Modal édition compte Vinted -->
+<div class="overlay" id="vaccModal" onclick="if(event.target===this)closeVacc()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeVacc()">✕</button>
+    <h3>✏️ Modifier le compte Vinted</h3>
+    <p class="info" id="vaccEditInfo"></p>
+    <div class="field"><label>Nom</label><input type="text" id="vaccEditName"></div>
+    <div class="field"><label>Assigné à</label><select id="vaccEditAssign"></select></div>
+    <button class="btn btn-primary btn-full" id="vaccEditSave" onclick="saveVacc()">💾 Enregistrer</button>
+  </div>
+</div>
+
+<!-- Modal édition employé -->
+<div class="overlay" id="editEmpModal" onclick="if(event.target===this)closeEditEmp()">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeEditEmp()">✕</button>
+    <h3>✏️ Modifier l'employé</h3>
+    <p class="info" id="emEditInfo"></p>
+    <div class="field"><label>Nom</label><input type="text" id="emEditName"></div>
+    <div class="field"><label>Email <small style="color:var(--muted)">(lecture seule)</small></label><input type="email" id="emEditEmail" readonly style="background:var(--page);color:var(--muted)"></div>
+    <div class="field">
+      <label>Réinitialiser le mot de passe</label>
+      <button class="btn btn-ghost btn-full" id="emResetBtn" onclick="resetEmpPwd()" style="padding:10px">📧 Envoyer un email de réinitialisation</button>
+      <p style="font-size:.7rem;color:var(--muted);margin-top:6px">L'employé recevra un lien sécurisé pour choisir son nouveau mot de passe.</p>
+    </div>
+    <button class="btn btn-primary btn-full" id="emEditSave" onclick="saveEditEmp()" style="margin-top:8px">💾 Enregistrer le nom</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+let articles=[],employees=[],vaccs=[],editingEmpId=null,editingVaccId=null;
+
+requireAuth(['admin']).then(p=>{ if(!p)return; document.getElementById('who').textContent=(p.name||p.email)+' · admin'; init() });
+
+function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function toast(m,err){const el=document.getElementById('toast');el.textContent=m;el.className='show'+(err?' error':'');setTimeout(()=>el.className='',2400)}
+function showErr(h){const el=document.getElementById('cfgAlert');el.innerHTML='<strong>Erreur</strong> '+h;el.style.display='block'}
+function hostName(url){try{return new URL(url).hostname.replace('www.','')}catch{return 'lien'}}
+function empName(id){const e=employees.find(x=>x.id===id);return e?(e.name||e.email):null}
+
+async function init(){
+  initImportDropzone();
+  await charger();
+  setInterval(charger,30000);
+}
+
+function initImportDropzone(){
+  const dz=document.getElementById('csvDropzone');
+  if(!dz)return;
+  // Click → file picker (fallback déjà existant)
+  dz.addEventListener('click',()=>{
+    if(dz.classList.contains('is-busy'))return;
+    document.getElementById('csvInput').click();
+  });
+  // Visuel drag
+  ['dragenter','dragover'].forEach(ev=>{
+    dz.addEventListener(ev,(e)=>{e.preventDefault();e.stopPropagation();if(!dz.classList.contains('is-busy'))dz.classList.add('is-drag')});
+  });
+  dz.addEventListener('dragleave',(e)=>{
+    if(dz.contains(e.relatedTarget))return;
+    dz.classList.remove('is-drag');
+  });
+  dz.addEventListener('drop',(e)=>{
+    e.preventDefault();e.stopPropagation();
+    dz.classList.remove('is-drag');
+    if(dz.classList.contains('is-busy'))return;
+    const file=e.dataTransfer&&e.dataTransfer.files&&e.dataTransfer.files[0];
+    if(!file)return;
+    runImportFlow(file);
+  });
+  // Bloque le drop sur le reste de la page (sinon Chrome ouvre le fichier)
+  ['dragover','drop'].forEach(ev=>window.addEventListener(ev,(e)=>{
+    if(!dz.contains(e.target)) e.preventDefault();
+  }));
+}
+
+async function runImportFlow(file){
+  if(!file){ toast('Aucun fichier sélectionné',true); return }
+  const dz=document.getElementById('csvDropzone');
+  // Validation type côté front (importFile re-vérifiera côté parsing)
+  const name=(file.name||'').toLowerCase();
+  const isOk=name.endsWith('.csv')||name.endsWith('.xlsx')||name.endsWith('.xls');
+  if(!isOk){ toast('Format invalide — CSV ou XLSX requis',true); return }
+
+  // Loading visuel
+  const oldHTML=dz?dz.innerHTML:null;
+  if(dz){ dz.classList.add('is-busy'); dz.innerHTML=`<span class="dz-text"><span class="dz-spin"></span> Import de « ${esc(file.name)} »…</span>` }
+  try{
+    await importFile(file);
+  }finally{
+    if(dz){ dz.classList.remove('is-busy'); dz.innerHTML=oldHTML }
+  }
+}
+
+async function charger(){
+  const [empRes,vaccRes,artRes]=await Promise.all([
+    sb.from('profiles').select('id,name,email').eq('role','employee').order('name'),
+    sb.from('vinted_accounts').select('*').order('name'),
+    sb.from('articles').select('*, vinted_account:vinted_accounts!vinted_account_id(id,name,assigned_to)').order('created_at',{ascending:false})
+  ]);
+  if(artRes.error){showErr(esc(artRes.error.message));return}
+  document.getElementById('cfgAlert').style.display='none';
+  employees=empRes.data||[]; vaccs=vaccRes.data||[]; articles=artRes.data||[];
+  fillDropdowns(); renderEmpList(); renderVaccList();
+}
+
+function fillDropdowns(){
+  const empOpts='<option value="">— Aucun —</option>'+employees.map(e=>`<option value="${e.id}">${esc(e.name||e.email)}</option>`).join('');
+  document.getElementById('vAssign').innerHTML=empOpts;
+  document.getElementById('vaccEditAssign').innerHTML=empOpts;
+
+  const vaccOpts='<option value="">— Aucun —</option>'+vaccs.map(v=>`<option value="${v.id}">${esc(v.name)}${v.assigned_to?` · ${esc(empName(v.assigned_to)||'?')}`:''}</option>`).join('');
+  document.getElementById('aVacc').innerHTML=vaccOpts;
+}
+
+function renderEmpList(){
+  const host=document.getElementById('empList');
+  if(!employees.length){host.innerHTML='<div style="color:var(--muted);font-size:.78rem">Aucun employé.</div>';return}
+  host.innerHTML=employees.map(e=>{
+    const nbVacc=vaccs.filter(v=>v.assigned_to===e.id).length;
+    return`<div class="list-item"><div><strong>${esc(e.name||'—')}</strong><br><small>${esc(e.email)} · ${nbVacc} compte(s)</small></div><div class="acts"><button class="btn btn-ghost" style="font-size:.7rem;padding:5px 9px" onclick="openEditEmp('${e.id}')" title="Modifier">✏️</button><button class="btn btn-danger" style="font-size:.7rem;padding:5px 9px" onclick="deleteEmployee('${e.id}')" title="Supprimer">🗑</button></div></div>`;
+  }).join('');
+}
+
+function renderVaccList(){
+  const host=document.getElementById('vaccList');
+  if(!vaccs.length){host.innerHTML='<div style="color:var(--muted);font-size:.78rem">Aucun compte.</div>';return}
+  host.innerHTML=vaccs.map(v=>{
+    const nbArts=articles.filter(a=>a.vinted_account_id===v.id).length;
+    const emp=v.assigned_to?empName(v.assigned_to):null;
+    return`<div class="list-item"><div><strong>${esc(v.name)}</strong><br><small>${emp?'→ '+esc(emp):'<span style="color:var(--bad)">Non assigné</span>'} · ${nbArts} prod.</small></div><div class="acts"><button class="btn btn-ghost" style="font-size:.7rem;padding:5px 9px" onclick="openVacc('${v.id}')">✏️</button><button class="btn btn-danger" style="font-size:.7rem;padding:5px 9px" onclick="delVacc('${v.id}')">✕</button></div></div>`;
+  }).join('');
+}
+
+/* ======== CSV IMPORT ======== */
+const CSV_COLS=['supplier_url','price','min_price','size','color','vinted_account'];
+
+function parseCSVLine(line){
+  const fields=[]; let cur='', q=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){ if(q && line[i+1]==='"'){cur+='"';i++} else q=!q }
+    else if(c===',' && !q){ fields.push(cur); cur='' }
+    else cur+=c;
+  }
+  fields.push(cur);
+  return fields.map(f=>f.trim());
+}
+
+function parseCSV(text){
+  // Retire un éventuel BOM UTF-8 et normalise les fins de ligne
+  const cleaned=text.replace(/^﻿/,'').replace(/\r\n?/g,'\n');
+  const lines=cleaned.split('\n').filter(l=>l.trim().length>0);
+  return lines.map(parseCSVLine);
+}
+
+const TEMPLATE_URL='https://docs.google.com/spreadsheets/d/1sX1DW6GVpTBYQ3H_BkZy85x49GrjtPEwT5vhgffQKgc/copy';
+function openTemplate(){
+  window.open(TEMPLATE_URL,'_blank','noopener,noreferrer');
+}
+
+function readFileText(file){
+  return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsText(file)});
+}
+function readFileBuffer(file){
+  return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsArrayBuffer(file)});
+}
+
+// Détecte le format et renvoie un tableau de tableaux (1ère ligne = headers)
+async function readFileAsRows(file){
+  const name=(file.name||'').toLowerCase();
+  const isXlsx = name.endsWith('.xlsx')||name.endsWith('.xls')||/sheet|excel/.test(file.type||'');
+  if(isXlsx){
+    if(typeof XLSX==='undefined') throw new Error('Lib XLSX non chargée');
+    const buf=await readFileBuffer(file);
+    const wb=XLSX.read(buf,{type:'array'});
+    if(!wb.SheetNames.length) throw new Error('Classeur vide');
+    const sheet=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:false});
+    return rows.map(r=>(Array.isArray(r)?r.map(c=>String(c==null?'':c).trim()):[]))
+               .filter(r=>r.some(c=>c&&c.length));
+  } else {
+    const text=await readFileText(file);
+    return parseCSV(text);
+  }
+}
+
+function showImportReport(imported, errors){
+  // Modale simple in-page (pas de dépendance, pas de blocage UI bloquant)
+  const wrap=document.createElement('div');
+  wrap.style.cssText='position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(8px);z-index:300;display:flex;align-items:center;justify-content:center;padding:14px';
+  const errList=errors.length
+    ? `<div style="margin-top:12px;max-height:240px;overflow:auto;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:10px;font-size:.78rem;color:#991b1b">
+        <strong>${errors.length} ligne${errors.length>1?'s':''} ignorée${errors.length>1?'s':''} :</strong>
+        <ul style="margin:6px 0 0 18px;padding:0">${errors.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>
+       </div>`
+    : '';
+  wrap.innerHTML=`<div style="background:#fff;border-radius:18px;padding:22px;max-width:560px;width:100%;box-shadow:0 24px 48px -12px rgba(15,23,42,.25)">
+    <h3 style="font-family:Outfit,sans-serif;font-size:1.15rem;margin-bottom:6px">📥 Import terminé</h3>
+    <p style="font-size:.85rem;color:#0f172a">
+      <span style="color:#10b981;font-weight:700">${imported}</span> produit${imported>1?'s':''} importé${imported>1?'s':''}
+      ${errors.length?` · <span style="color:#ef4444;font-weight:700">${errors.length}</span> erreur${errors.length>1?'s':''}`:''}
+    </p>
+    ${errList}
+    <button class="btn btn-primary btn-full" style="margin-top:14px" onclick="this.parentElement.parentElement.remove()">Fermer</button>
+  </div>`;
+  wrap.addEventListener('click',e=>{if(e.target===wrap)wrap.remove()});
+  document.body.appendChild(wrap);
+}
+
+async function importFile(file){
+  if(!file){ toast('Aucun fichier sélectionné',true); return }
+
+  let rows;
+  try{ rows=await readFileAsRows(file) }
+  catch(e){ toast('Lecture impossible: '+e.message,true);return }
+  if(rows.length<2){ toast('Fichier vide ou sans données',true);return }
+
+  const headers=rows[0].map(h=>h.toLowerCase());
+  const idx={};
+  for(const c of CSV_COLS) idx[c]=headers.indexOf(c);
+  if(idx.supplier_url<0){ toast('Colonne "supplier_url" manquante',true);return }
+  if(idx.vinted_account<0){ toast('Colonne "vinted_account" manquante',true);return }
+
+  // Index des comptes par nom (insensible à la casse)
+  const vaccByName=new Map();
+  for(const v of vaccs) vaccByName.set((v.name||'').trim().toLowerCase(), v);
+
+  const valid=[], errors=[];
+  for(let i=1;i<rows.length;i++){
+    const r=rows[i];
+    if(!r || r.every(c=>!String(c||'').trim())) continue; // ligne vide
+
+    try{
+      const url=(r[idx.supplier_url]||'').trim();
+      if(!url){ errors.push(`Ligne ${i+1} : supplier_url vide`); continue }
+
+      const accName=(r[idx.vinted_account]||'').trim();
+      if(!accName){ errors.push(`Ligne ${i+1} : vinted_account vide`); continue }
+      const vacc=vaccByName.get(accName.toLowerCase());
+      if(!vacc){ errors.push(`Ligne ${i+1} : compte introuvable « ${accName} »`); continue }
+
+      const priceRaw=String(r[idx.price]||'').replace(',','.').trim();
+      const minRaw  =String(r[idx.min_price]||'').replace(',','.').trim();
+      const price=priceRaw===''?null:parseFloat(priceRaw);
+      const minP =minRaw===''?null:parseFloat(minRaw);
+      if(price!==null && !Number.isFinite(price)){ errors.push(`Ligne ${i+1} : prix invalide « ${priceRaw} »`); continue }
+      if(minP!==null && !Number.isFinite(minP)){ errors.push(`Ligne ${i+1} : prix min invalide « ${minRaw} »`); continue }
+
+      valid.push({
+        supplier_url:url,
+        price:price,
+        min_price:minP,
+        size:(r[idx.size]||'').trim()||null,
+        color:(r[idx.color]||'').trim()||null,
+        brand:null,
+        title:null,
+        description:null,
+        images:[],
+        vinted_account_id:vacc.id,
+        status:'draft'
+      });
+    }catch(e){
+      errors.push(`Ligne ${i+1} : erreur de parsing (${e.message})`);
+    }
+  }
+
+  if(!valid.length){
+    showImportReport(0, errors.length?errors:['Aucune ligne valide trouvée.']);
+    return;
+  }
+
+  const{error}=await sb.from('articles').insert(valid);
+  if(error){
+    showImportReport(0, [...errors, 'Insertion Supabase : '+error.message]);
+    return;
+  }
+
+  showImportReport(valid.length, errors);
+  charger();
+}
+
+/* ======== ARTICLES ======== */
+async function addArticle(){
+  const link=document.getElementById('aLink').value.trim();
+  if(!link){toast('Lien requis',true);return}
+  const article={
+    supplier_url:link,
+    price:parseFloat(document.getElementById('aPrice').value)||null,
+    min_price:parseFloat(document.getElementById('aMin').value)||null,
+    size:document.getElementById('aSize').value.trim()||null,
+    color:document.getElementById('aColor').value.trim()||null,
+    vinted_account_id:document.getElementById('aVacc').value||null,
+    status:'draft'
+  };
+  const{error}=await sb.from('articles').insert(article);
+  if(error){toast('Erreur: '+error.message,true);return}
+  toast('Produit ajouté ✓');
+  ['aLink','aPrice','aMin','aSize','aColor'].forEach(id=>document.getElementById(id).value='');
+  charger();
+}
+
+/* ======== COMPTES VINTED ======== */
+async function addVacc(){
+  const name=document.getElementById('vName').value.trim();
+  const assigned_to=document.getElementById('vAssign').value||null;
+  if(!name){toast('Nom requis',true);return}
+  const{error}=await sb.from('vinted_accounts').insert({name,assigned_to});
+  if(error){toast('Erreur: '+error.message,true);return}
+  toast('Compte créé ✓');
+  document.getElementById('vName').value='';document.getElementById('vAssign').value='';
+  charger();
+}
+
+function openVacc(id){
+  const v=vaccs.find(x=>x.id===id);if(!v)return;
+  editingVaccId=id;
+  document.getElementById('vaccEditInfo').textContent=`ID: ${v.id}`;
+  document.getElementById('vaccEditName').value=v.name||'';
+  document.getElementById('vaccEditAssign').value=v.assigned_to||'';
+  document.getElementById('vaccModal').classList.add('open');
+}
+function closeVacc(){document.getElementById('vaccModal').classList.remove('open');editingVaccId=null}
+
+async function saveVacc(){
+  if(!editingVaccId)return;
+  const name=document.getElementById('vaccEditName').value.trim();
+  const assigned_to=document.getElementById('vaccEditAssign').value||null;
+  if(!name){toast('Nom requis',true);return}
+  const btn=document.getElementById('vaccEditSave');btn.disabled=true;btn.textContent='Enregistrement…';
+  const{error}=await sb.from('vinted_accounts').update({name,assigned_to}).eq('id',editingVaccId);
+  btn.disabled=false;btn.textContent='💾 Enregistrer';
+  if(error){toast('Erreur: '+error.message,true);return}
+  toast('Compte maj ✓');closeVacc();charger();
+}
+
+async function delVacc(id){
+  const v=vaccs.find(x=>x.id===id);
+  const nbArts=articles.filter(a=>a.vinted_account_id===id).length;
+  const msg=nbArts?`Ce compte a ${nbArts} produit(s) liés. Les produits resteront mais ne seront plus liés à un compte. Continuer ?`:'Supprimer ce compte ?';
+  if(!confirm(msg))return;
+  const{error}=await sb.from('vinted_accounts').delete().eq('id',id);
+  if(error){toast('Erreur: '+error.message,true);return}
+  toast('Compte supprimé');charger();
+}
+
+/* ======== EMPLOYÉS ======== */
+async function addEmployee(){
+  const name=document.getElementById('eName').value.trim();
+  const email=document.getElementById('eEmail').value.trim();
+  const pw=document.getElementById('ePassword').value;
+  if(!email||!pw||!name){toast('Tous les champs requis',true);return}
+  if(pw.length<6){toast('Mot de passe min. 6 caractères',true);return}
+  try{
+    await createEmployee(email,pw,name);
+    toast('Employé créé ✓');
+    ['eName','eEmail','ePassword'].forEach(id=>document.getElementById(id).value='');
+    setTimeout(charger,800);
+  }catch(e){toast('Erreur: '+e.message,true)}
+}
+
+function openEditEmp(id){
+  const e=employees.find(x=>x.id===id);if(!e)return;
+  editingEmpId=id;
+  document.getElementById('emEditInfo').textContent=`ID: ${e.id}`;
+  document.getElementById('emEditName').value=e.name||'';
+  document.getElementById('emEditEmail').value=e.email||'';
+  document.getElementById('editEmpModal').classList.add('open');
+}
+function closeEditEmp(){document.getElementById('editEmpModal').classList.remove('open');editingEmpId=null}
+
+async function saveEditEmp(){
+  if(!editingEmpId)return;
+  const name=document.getElementById('emEditName').value.trim();
+  if(!name){toast('Nom requis',true);return}
+  const btn=document.getElementById('emEditSave');btn.disabled=true;btn.textContent='Enregistrement…';
+  const{error}=await sb.from('profiles').update({name}).eq('id',editingEmpId);
+  btn.disabled=false;btn.textContent='💾 Enregistrer le nom';
+  if(error){toast('Erreur: '+error.message,true);return}
+  toast('Nom maj ✓');closeEditEmp();charger();
+}
+
+async function deleteEmployee(userId){
+  const e=employees.find(x=>x.id===userId);
+  const label=e?(e.name||e.email):'cet employé';
+  if(!confirm(`Supprimer ${label} ? Cette action est irréversible.`))return;
+  const{error}=await sb.rpc('delete_employee',{user_id:userId});
+  if(error){toast('Erreur: '+error.message,true);return}
+  toast('Employé supprimé ✓');
+  charger();
+}
+
+async function resetEmpPwd(){
+  const e=employees.find(x=>x.id===editingEmpId);if(!e)return;
+  const btn=document.getElementById('emResetBtn');btn.disabled=true;btn.textContent='Envoi…';
+  const{error}=await sb.auth.resetPasswordForEmail(e.email);
+  btn.disabled=false;btn.textContent='📧 Envoyer un email de réinitialisation';
+  if(error){toast('Erreur: '+error.message,true);return}
+  toast('Email envoyé à '+e.email+' ✓');
+}
+</script>
+</body>
+</html>
