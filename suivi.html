@@ -96,26 +96,6 @@ tbody tr:hover{background:rgba(248,250,252,.8)}
 .show-more-btn:hover{background:rgba(99,102,241,.14)}
 
 /* ===== ACCOUNT PICKER (toolbar) ===== */
-.vacc-picker{position:relative;flex:0 0 auto}
-.vacc-btn{display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:7px 13px;font-size:.82rem;font-weight:600;font-family:'Inter',sans-serif;cursor:pointer;transition:all .18s;color:var(--ink);white-space:nowrap}
-.vacc-btn:hover{border-color:rgba(99,102,241,.45);box-shadow:0 4px 12px -4px rgba(99,102,241,.12)}
-.vacc-btn.has-filter{border-color:var(--primary);background:rgba(99,102,241,.06);color:var(--primary)}
-.vacc-btn .vb-icon{font-size:.9rem}
-.vacc-btn .vb-count{font-size:.65rem;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(99,102,241,.12);color:var(--primary);min-width:18px;text-align:center}
-.vacc-btn.has-filter .vb-count{background:rgba(99,102,241,.2)}
-.vacc-btn .vb-arrow{font-size:.6rem;color:var(--muted);transition:transform .2s}
-.vacc-picker.open .vb-arrow{transform:rotate(180deg)}
-.vacc-menu{position:absolute;top:calc(100% + 6px);left:0;min-width:220px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px -8px rgba(15,23,42,.14);padding:4px;z-index:30;opacity:0;transform:translateY(-6px) scale(.97);pointer-events:none;transition:all .18s ease}
-.vacc-picker.open .vacc-menu{opacity:1;transform:translateY(0) scale(1);pointer-events:auto}
-.vacc-opt{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;font-size:.8rem;font-weight:500;cursor:pointer;transition:background .12s;color:var(--ink);gap:8px}
-.vacc-opt:hover{background:rgba(99,102,241,.06)}
-.vacc-opt.active{background:rgba(99,102,241,.1);font-weight:700;color:var(--primary)}
-.vacc-opt .vo-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.vacc-opt .vo-badge{font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:999px;background:rgba(99,102,241,.1);color:var(--primary)}
-.vacc-opt.active .vo-badge{background:rgba(99,102,241,.2)}
-.vacc-opt .vo-check{font-size:.7rem;opacity:0}
-.vacc-opt.active .vo-check{opacity:1}
-
 @media(max-width:1100px){.stats{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:600px){
   html,body{-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
@@ -128,7 +108,6 @@ tbody tr:hover{background:rgba(248,250,252,.8)}
   .toolbar{flex-direction:column;align-items:stretch;padding:10px;gap:6px}
   .toolbar input,.toolbar select{min-height:44px;font-size:.9rem}
   .toolbar .btn{min-height:42px}
-  .vacc-menu{min-width:180px}
   /* Boutons et checkbox tap-friendly */
   .btn{min-height:40px}
   .chk{width:24px;height:24px}
@@ -164,15 +143,7 @@ tbody tr:hover{background:rgba(248,250,252,.8)}
 
   <div class="toolbar">
     <input type="text" id="search" placeholder="Rechercher (titre, couleur, lien)…" oninput="debouncedRender()">
-    <div class="vacc-picker" id="vaccPicker">
-      <button class="vacc-btn" id="vaccBtn" onclick="toggleVaccMenu()">
-        <span class="vb-icon">🛍</span>
-        <span id="vaccBtnLabel">Tous les comptes</span>
-        <span class="vb-count" id="vaccBtnCount">0</span>
-        <span class="vb-arrow">▼</span>
-      </button>
-      <div class="vacc-menu" id="vaccMenu"></div>
-    </div>
+    <select id="filterAccount" onchange="render()" style="border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 11px;font-size:.82rem;font-family:inherit"><option value="">Tous les comptes</option></select>
     <div class="filters" id="filters">
       <button class="fbtn active" data-f="all">Tous</button>
       <button class="fbtn" data-f="draft">À traiter</button>
@@ -214,7 +185,7 @@ tbody tr:hover{background:rgba(248,250,252,.8)}
 <div id="toast"></div>
 
 <script>
-let articles=[],vaccs=[],filtre='all',profile=null,activeVaccId='';
+let articles=[],vaccs=[],filtre='all',profile=null;
 const ROWS_PER_PAGE=50;
 let rowLimit=ROWS_PER_PAGE;
 
@@ -247,82 +218,27 @@ async function init(){
 let _fetchId=0;
 
 async function charger(){
-  const myFetch=++_fetchId; // identifiant unique pour cette requête
-
-  // Construire la requête articles avec filtre conditionnel
-  let artQuery=sb.from('articles')
-    .select('id,title,description,brand,price,min_price,size,color,supplier_url,images,status,prolonged,warehouse,bordereau,vinted_account_id,created_at, vinted_account:vinted_accounts!vinted_account_id(id,name)');
-
-  // Filtre côté Supabase si un compte est sélectionné
-  if(activeVaccId){
-    artQuery=artQuery.eq('vinted_account_id',activeVaccId);
-  }
-
-  artQuery=artQuery.order('created_at',{ascending:false});
-
-  // Les comptes Vinted sont toujours chargés en entier (pour le menu)
+  const myFetch=++_fetchId;
   const [vaccRes,artRes]=await Promise.all([
     sb.from('vinted_accounts').select('id,name').order('name'),
-    artQuery
+    sb.from('articles')
+      .select('id,title,description,brand,price,min_price,size,color,supplier_url,images,status,prolonged,warehouse,bordereau,vinted_account_id,created_at, vinted_account:vinted_accounts!vinted_account_id(id,name)')
+      .order('created_at',{ascending:false})
   ]);
-
-  // Guard : si un fetch plus récent a été lancé, ignorer ce résultat
   if(myFetch!==_fetchId) return;
-
   if(artRes.error){showErr(esc(artRes.error.message));return}
   document.getElementById('cfgAlert').style.display='none';
   vaccs=vaccRes.data||[];
   articles=(artRes.data||[]).map(a=>({...a,images:Array.isArray(a.images)?a.images:[]}));
-  buildVaccMenu();
+  majComptes();
   renderStats();renderFast();
 }
 
-function buildVaccMenu(){
-  const countByVacc={};
-  articles.forEach(a=>{ if(a.vinted_account_id){ countByVacc[a.vinted_account_id]=(countByVacc[a.vinted_account_id]||0)+1 } });
-  const allCount=articles.length;
-
-  const menu=document.getElementById('vaccMenu');
-  let html=`<div class="vacc-opt${activeVaccId===''?' active':''}" onclick="setAccountFilter('')"><span class="vo-check">✓</span><span class="vo-name">Tous les comptes</span><span class="vo-badge">${allCount}</span></div>`;
-  vaccs.forEach(v=>{
-    const cnt=countByVacc[v.id]||0;
-    html+=`<div class="vacc-opt${activeVaccId===v.id?' active':''}" onclick="setAccountFilter('${v.id}')"><span class="vo-check">✓</span><span class="vo-name">${esc(v.name)}</span><span class="vo-badge">${cnt}</span></div>`;
-  });
-  menu.innerHTML=html;
-
-  const btn=document.getElementById('vaccBtn');
-  const lblEl=document.getElementById('vaccBtnLabel');
-  const cntEl=document.getElementById('vaccBtnCount');
-  if(activeVaccId){
-    const acc=vaccs.find(v=>v.id===activeVaccId);
-    lblEl.textContent=acc?acc.name:'Compte';
-    cntEl.textContent=countByVacc[activeVaccId]||0;
-    btn.classList.add('has-filter');
-  } else {
-    lblEl.textContent='Tous les comptes';
-    cntEl.textContent=allCount;
-    btn.classList.remove('has-filter');
-  }
+function majComptes(){
+  const sel=document.getElementById('filterAccount');
+  const cur=sel.value;
+  sel.innerHTML='<option value="">Tous les comptes</option>'+vaccs.map(v=>`<option value="${v.id}"${v.id===cur?' selected':''}>${esc(v.name)}</option>`).join('');
 }
-
-function toggleVaccMenu(){
-  document.getElementById('vaccPicker').classList.toggle('open');
-}
-
-async function setAccountFilter(id){
-  activeVaccId=id;
-  document.getElementById('vaccPicker').classList.remove('open');
-  rowLimit=ROWS_PER_PAGE;
-  // Mettre à jour le menu immédiatement (feedback visuel instant)
-  buildVaccMenu();
-  // Re-fetch depuis Supabase avec le filtre côté serveur
-  await charger();
-}
-
-document.addEventListener('click',e=>{
-  const picker=document.getElementById('vaccPicker');
-  if(picker && !picker.contains(e.target)) picker.classList.remove('open');
-})
 
 function renderStats(){
   const counts={draft:0,ready:0,posted:0,sold:0,pending_order:0};
@@ -380,7 +296,8 @@ function getFilteredList(){
   let list=articles;
   const q=document.getElementById('search').value.toLowerCase().trim();
   if(q) list=list.filter(a=>(a.title||'').toLowerCase().includes(q)||(a.color||'').toLowerCase().includes(q)||(a.supplier_url||'').toLowerCase().includes(q));
-  if(activeVaccId) list=list.filter(a=>a.vinted_account_id===activeVaccId);
+  const acc=document.getElementById('filterAccount').value;
+  if(acc) list=list.filter(a=>a.vinted_account_id===acc);
   if(filtre!=='all') list=list.filter(a=>a.status===filtre);
   return list;
 }
@@ -509,7 +426,7 @@ async function toggleSold(id,checked){
       const firstEmpty=tbody.querySelector('.empty-row');
       if(firstEmpty) firstEmpty.remove();
       tbody.insertBefore(tmp.firstElementChild,tbody.firstElementChild);
-      renderStats(); buildVaccMenu();
+      renderStats(); majComptes();
       toast('Vendu ✓ — Copie créée pour reposter');
     }
   } else {
@@ -535,14 +452,14 @@ async function executeDelete(id){
   const backup=idx>=0?articles[idx]:null;
   if(tr) tr.remove();
   if(idx>=0) articles.splice(idx,1);
-  renderStats(); buildVaccMenu();
+  renderStats(); majComptes();
   // Check if tbody is now empty and show placeholder
   const tbody=document.getElementById('tbody');
   if(!tbody.querySelector('tr')) tbody.innerHTML='<tr class="empty-row"><td colspan="11">Aucun résultat.</td></tr>';
   const{error}=await sb.from('articles').delete().eq('id',id);
   if(error){
     // Rollback
-    if(backup){articles.splice(idx,0,backup);render();renderStats();buildVaccMenu()}
+    if(backup){articles.splice(idx,0,backup);render();renderStats();majComptes()}
     toast('Erreur: '+error.message,true);return;
   }
   toast('Supprimé ✓');
