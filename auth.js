@@ -51,9 +51,3 @@ async function createEmployee(email, password, name) {
   await temp.auth.signOut();
   return data;
 }
-
-async function listEmployees() {
-  const { data, error } = await sb.from('profiles').select('id,email,name').eq('role','employee').order('name');
-  if (error) throw error;
-  return data || [];
-}

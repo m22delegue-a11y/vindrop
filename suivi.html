@@ -42,6 +42,37 @@ main{max-width:1500px;margin:18px auto 0;padding:0 14px 30px}
 .btn-ghost{color:var(--ink);background:#fff;border:1px solid var(--line)}
 .btn-danger{color:#991b1b;background:#fef2f2;border:1px solid #fecaca}
 .btn-fiche{color:#fff;background:linear-gradient(135deg,var(--primary),#8b5cf6);box-shadow:0 4px 12px -4px rgba(99,102,241,.3)}
+.btn-edit{color:var(--muted);background:#fff;border:1px solid var(--line);padding:6px 8px}
+.btn-edit:hover{border-color:var(--primary);color:var(--primary);background:rgba(99,102,241,.04)}
+
+/* ===== PREVIEW MODAL (read-only) ===== */
+.pv-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.5);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:120;padding:14px}
+.pv-overlay.open{display:flex}
+.pv-box{width:min(880px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:18px;box-shadow:0 24px 48px -12px rgba(15,23,42,.25);padding:24px;position:relative}
+.pv-close{position:absolute;top:14px;right:14px;border:none;background:var(--page);width:32px;height:32px;border-radius:10px;cursor:pointer;font-size:1rem}
+.pv-close:hover{background:var(--line)}
+.pv-head{margin-bottom:16px;padding-right:36px}
+.pv-head h3{font-size:1.2rem;letter-spacing:-.02em;margin-bottom:4px;font-family:'Outfit',sans-serif}
+.pv-head .pv-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.pv-head .pv-meta .tag{font-size:.68rem}
+.pv-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.pv-section{background:var(--page);border:1px solid var(--line);border-radius:12px;padding:14px}
+.pv-section h4{font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:10px;font-weight:700;font-family:'Outfit',sans-serif}
+.pv-images{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:6px}
+.pv-images .pv-img{position:relative;aspect-ratio:1;border-radius:9px;overflow:hidden;background:#fff;border:1px solid var(--line)}
+.pv-images img{width:100%;height:100%;object-fit:cover;display:block}
+.pv-images .pv-dl{position:absolute;bottom:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(99,102,241,.85);color:#fff;font-size:.65rem;display:grid;place-items:center;text-decoration:none}
+.pv-empty{font-size:.78rem;color:var(--muted);text-align:center;padding:18px}
+.pv-field{margin-bottom:12px;position:relative}
+.pv-field:last-child{margin-bottom:0}
+.pv-field label{display:block;font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:4px}
+.pv-field .pv-val{font-size:.85rem;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:8px;padding:9px 11px;min-height:38px;white-space:pre-wrap;word-break:break-word}
+.pv-field .pv-val.muted{color:var(--muted);font-style:italic}
+.pv-copy{position:absolute;top:0;right:0;border:none;background:rgba(99,102,241,.1);color:var(--primary);font-size:.65rem;font-weight:700;padding:3px 8px;border-radius:6px;cursor:pointer}
+.pv-copy.copied{background:var(--good);color:#fff}
+.pv-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.pv-actions .btn{flex:1;min-width:130px;padding:11px}
+@media(max-width:700px){.pv-grid{grid-template-columns:1fr}}
 .btn-border{color:#fff;background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 12px -4px rgba(245,158,11,.3)}
 .btn-primary{color:#fff;background:linear-gradient(135deg,var(--primary),#8b5cf6);box-shadow:var(--shadow-m)}
 .table-wrap{background:var(--card);border:1px solid #fff;border-radius:18px;box-shadow:var(--shadow-s);overflow:hidden}
@@ -167,6 +198,30 @@ tbody tr:hover{background:rgba(248,250,252,.8)}
   </table></div></div>
 </main>
 
+<!-- PREVIEW MODAL (read-only) -->
+<div class="pv-overlay" id="previewModal" onclick="if(event.target===this)closePreview()">
+  <div class="pv-box">
+    <button class="pv-close" onclick="closePreview()">✕</button>
+    <div class="pv-head">
+      <h3 id="pvTitle">Fiche</h3>
+      <div class="pv-meta" id="pvMeta"></div>
+    </div>
+    <div class="pv-grid">
+      <div class="pv-section">
+        <h4>📷 Images</h4>
+        <div class="pv-images" id="pvImages"></div>
+      </div>
+      <div class="pv-section">
+        <h4>📝 Annonce</h4>
+        <div class="pv-field"><label>Titre</label><button class="pv-copy" onclick="pvCopy('pvVTitle',this)">Copier</button><div class="pv-val" id="pvVTitle"></div></div>
+        <div class="pv-field"><label>Description</label><button class="pv-copy" onclick="pvCopy('pvVDesc',this)">Copier</button><div class="pv-val" id="pvVDesc"></div></div>
+        <div class="pv-field"><label>Marque</label><button class="pv-copy" onclick="pvCopy('pvVBrand',this)">Copier</button><div class="pv-val" id="pvVBrand"></div></div>
+      </div>
+    </div>
+    <div class="pv-actions" id="pvActions"></div>
+  </div>
+</div>
+
 <div class="brd-overlay" id="brdModal" onclick="if(event.target===this)closeBrd()">
   <div class="brd-box">
     <button class="brd-close" onclick="closeBrd()">✕</button>
@@ -209,9 +264,14 @@ function showErr(h){const el=document.getElementById('cfgAlert');el.innerHTML='<
 function hostName(url){try{return new URL(url).hostname.replace('www.','')}catch{return'lien'}}
 
 async function init(){
-  document.querySelectorAll('.fbtn').forEach(b=>b.onclick=()=>{filtre=b.dataset.f;document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');rowLimit=ROWS_PER_PAGE;renderFast()});
+  document.querySelectorAll('.fbtn').forEach(b=>b.onclick=()=>{
+    filtre=b.dataset.f;
+    document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    rowLimit=ROWS_PER_PAGE;
+    render();
+  });
   await charger();
-  setInterval(charger,60000);
 }
 
 /* ===== FETCH GUARD : empêche les double-fetch concurrents ===== */
@@ -231,7 +291,7 @@ async function charger(){
   vaccs=vaccRes.data||[];
   articles=(artRes.data||[]).map(a=>({...a,images:Array.isArray(a.images)?a.images:[]}));
   majComptes();
-  renderStats();renderFast();
+  renderStats();render();
 }
 
 function majComptes(){
@@ -275,7 +335,8 @@ function renderRow(a){
     <td>${brdCell}</td>
     <td><div class="row-acts">
       ${a.supplier_url?`<a href="${esc(a.supplier_url)}" target="_blank" class="btn btn-ghost" style="font-size:.7rem" title="Lien fournisseur">🔗</a>`:''}
-      <a href="equipe.html?id=${a.id}" class="btn btn-fiche" style="font-size:.7rem">📝 Fiche</a>
+      <button class="btn btn-fiche" style="font-size:.7rem" onclick="openPreview('${a.id}')" title="Aperçu fiche">👁 Aperçu</button>
+      <button class="btn btn-edit" style="font-size:.7rem" onclick="goEdit('${a.id}')" title="Modifier la fiche">✏️</button>
       ${profile&&profile.role==='admin'?`<button class="btn btn-danger" style="font-size:.7rem" onclick="supprimer('${a.id}')">✕</button>`:''}
     </div></td>
   </tr>`;
@@ -302,54 +363,44 @@ function getFilteredList(){
   return list;
 }
 
-/* ===== RENDER RAPIDE : rendu par lots pour switch instantané ===== */
-const FAST_BATCH=15; // premières lignes rendues instantanément
+/* ===== RENDER : 2 passes pour first-paint instantané ===== */
+const FAST_BATCH=15;
 
-function renderFast(){
-  const list=getFilteredList();
-  const body=document.getElementById('tbody');
-  if(!list.length){body.innerHTML='<tr class="empty-row"><td colspan="11">Aucun résultat.</td></tr>';return}
-
-  const visible=list.slice(0,rowLimit);
-  const remaining=list.length-visible.length;
-
-  // Phase 1 : afficher les premières lignes IMMÉDIATEMENT
-  const batch1=visible.slice(0,FAST_BATCH);
-  const batch2=visible.slice(FAST_BATCH);
-
+// Helper : injecte du HTML brut dans body via DocumentFragment (évite reflow)
+function appendHtml(body, html){
   const tmp=document.createElement('tbody');
-  tmp.innerHTML=batch1.map(renderRow).join('');
+  tmp.innerHTML=html;
   const frag=document.createDocumentFragment();
   while(tmp.firstChild) frag.appendChild(tmp.firstChild);
-  body.textContent='';
   body.appendChild(frag);
+}
 
-  // Phase 2 : ajouter le reste après le premier paint (non bloquant)
-  if(batch2.length || remaining>0){
-    requestAnimationFrame(()=>{
-      const tmp2=document.createElement('tbody');
-      let extra=batch2.map(renderRow).join('');
-      if(remaining>0) extra+=`<tr class="show-more-row"><td colspan="11"><button class="show-more-btn" onclick="showMoreRows()">Voir ${remaining} ligne${remaining>1?'s':''} de plus…</button></td></tr>`;
-      tmp2.innerHTML=extra;
-      const frag2=document.createDocumentFragment();
-      while(tmp2.firstChild) frag2.appendChild(tmp2.firstChild);
-      body.appendChild(frag2);
-    });
-  }
+function showMoreRow(remaining){
+  return `<tr class="show-more-row"><td colspan="11"><button class="show-more-btn" onclick="showMoreRows()">Voir ${remaining} ligne${remaining>1?'s':''} de plus…</button></td></tr>`;
 }
 
 function render(){
   const list=getFilteredList();
   const body=document.getElementById('tbody');
   if(!list.length){body.innerHTML='<tr class="empty-row"><td colspan="11">Aucun résultat.</td></tr>';return}
+
   const visible=list.slice(0,rowLimit);
   const remaining=list.length-visible.length;
-  const tmp=document.createElement('tbody');
-  tmp.innerHTML=visible.map(renderRow).join('')+(remaining>0?`<tr class="show-more-row"><td colspan="11"><button class="show-more-btn" onclick="showMoreRows()">Voir ${remaining} ligne${remaining>1?'s':''} de plus…</button></td></tr>`:'');
-  const frag=document.createDocumentFragment();
-  while(tmp.firstChild) frag.appendChild(tmp.firstChild);
+  const batch1=visible.slice(0,FAST_BATCH);
+  const batch2=visible.slice(FAST_BATCH);
+
+  // Phase 1 : premières lignes immédiatement
   body.textContent='';
-  body.appendChild(frag);
+  appendHtml(body, batch1.map(renderRow).join(''));
+
+  // Phase 2 : reste + bouton "voir plus", dans le frame suivant (non bloquant)
+  if(batch2.length || remaining>0){
+    requestAnimationFrame(()=>{
+      let html=batch2.map(renderRow).join('');
+      if(remaining>0) html+=showMoreRow(remaining);
+      appendHtml(body, html);
+    });
+  }
 }
 
 function showMoreRows(){
@@ -435,34 +486,85 @@ async function toggleSold(id,checked){
 }
 
 async function supprimer(id){
-  // Check if confirmation is required
-  const skipConfirm = localStorage.getItem('noConfirmDelete') === 'true';
-  if(!skipConfirm){
-    const ok = confirm('Supprimer ce produit ?');
-    if(!ok) return;
-  }
-  // Proceed with deletion (always reaches here if skipConfirm or confirmed)
-  await executeDelete(id);
-}
+  const skipConfirm=localStorage.getItem('noConfirmDelete')==='true';
+  if(!skipConfirm && !confirm('Supprimer ce produit ?')) return;
 
-async function executeDelete(id){
-  // Optimistic : retire du DOM et de l'array immédiatement
-  const tr=document.querySelector(`tr[data-id="${id}"]`);
+  // Optimistic : retire du DOM + array immédiatement
   const idx=articles.findIndex(a=>a.id===id);
-  const backup=idx>=0?articles[idx]:null;
-  if(tr) tr.remove();
-  if(idx>=0) articles.splice(idx,1);
+  if(idx<0) return;
+  const backup=articles[idx];
+  document.querySelector(`tr[data-id="${id}"]`)?.remove();
+  articles.splice(idx,1);
   renderStats(); majComptes();
-  // Check if tbody is now empty and show placeholder
   const tbody=document.getElementById('tbody');
   if(!tbody.querySelector('tr')) tbody.innerHTML='<tr class="empty-row"><td colspan="11">Aucun résultat.</td></tr>';
+
   const{error}=await sb.from('articles').delete().eq('id',id);
   if(error){
-    // Rollback
-    if(backup){articles.splice(idx,0,backup);render();renderStats();majComptes()}
-    toast('Erreur: '+error.message,true);return;
+    articles.splice(idx,0,backup);
+    render(); renderStats(); majComptes();
+    toast('Erreur: '+error.message,true);
+    return;
   }
   toast('Supprimé ✓');
+}
+
+/* === PREVIEW (lecture seule) === */
+function goEdit(id){ location.href=`equipe.html?id=${id}` }
+
+function openPreview(id){
+  const a=articles.find(x=>x.id===id);
+  if(!a)return;
+  const name=a.title||hostName(a.supplier_url||'');
+  document.getElementById('pvTitle').textContent=name;
+
+  // Meta : prix, taille, couleur, compte
+  const metaParts=[];
+  if(a.price) metaParts.push(`<span class="tag green">${a.price} €</span>`);
+  if(a.min_price) metaParts.push(`<span class="tag amber">Min ${a.min_price} €</span>`);
+  if(a.size) metaParts.push(`<span class="tag neutral">${esc(a.size)}</span>`);
+  if(a.color) metaParts.push(`<span class="tag neutral">${esc(a.color)}</span>`);
+  if(a.vinted_account) metaParts.push(`<span class="tag neutral">🛍 ${esc(a.vinted_account.name)}</span>`);
+  metaParts.push(`<span class="tag ${STATUS_TAG[a.status]||'amber'}">${STATUS_LABEL[a.status]||a.status}</span>`);
+  document.getElementById('pvMeta').innerHTML=metaParts.join('');
+
+  // Images
+  const imgHost=document.getElementById('pvImages');
+  if(a.images && a.images.length){
+    imgHost.innerHTML=a.images.map((src,i)=>`<div class="pv-img"><img src="${esc(src)}" loading="lazy" onerror="this.style.opacity=.3"><a class="pv-dl" href="${esc(src)}" download="image_${i+1}.jpg" title="Télécharger">⬇</a></div>`).join('');
+  } else {
+    imgHost.innerHTML='<div class="pv-empty">Aucune image</div>';
+  }
+
+  // Champs lecture seule
+  const setVal=(id,val)=>{
+    const el=document.getElementById(id);
+    if(val && String(val).trim()){ el.textContent=val; el.classList.remove('muted') }
+    else { el.textContent='— vide —'; el.classList.add('muted') }
+  };
+  setVal('pvVTitle', a.title);
+  setVal('pvVDesc', a.description);
+  setVal('pvVBrand', a.brand);
+
+  // Actions : lien fournisseur, bordereau si dispo
+  const actions=[];
+  if(a.supplier_url) actions.push(`<a href="${esc(a.supplier_url)}" target="_blank" class="btn btn-ghost">🔗 Lien fournisseur</a>`);
+  if(a.bordereau && a.bordereau.src) actions.push(`<a href="${esc(a.bordereau.src)}" download="${esc(a.bordereau.name||'bordereau.pdf')}" class="btn btn-border">⬇ Bordereau PDF</a>`);
+  actions.push(`<button class="btn btn-fiche" onclick="goEdit('${a.id}')">✏️ Modifier la fiche</button>`);
+  document.getElementById('pvActions').innerHTML=actions.join('');
+
+  document.getElementById('previewModal').classList.add('open');
+}
+
+function closePreview(){ document.getElementById('previewModal').classList.remove('open') }
+
+function pvCopy(id,btn){
+  const text=document.getElementById(id).textContent;
+  if(!text || text==='— vide —'){ toast('Champ vide',true); return }
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.textContent='Copié ✓'; btn.classList.add('copied');
+    setTimeout(()=>{ btn.textContent='Copier'; btn.classList.remove('copied') },1500);
+  }).catch(()=>toast('Erreur copie',true));
 }
 
 /* === BORDEREAU === */

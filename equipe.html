@@ -387,10 +387,12 @@ function bumpDailyDone(){const k=todayKey();const cur=getTodayCount();localStora
 /* ===== INIT ===== */
 async function init(){
   await charger();
-  setInterval(charger,60000);
-  const params=new URLSearchParams(location.search);
-  const openId=params.get('id');
-  if(openId){const t=articles.find(a=>a.id===openId);if(t){openModal(openId);history.replaceState({},'',location.pathname)}}
+  // Auto-open d'une fiche via ?id=...
+  const openId=new URLSearchParams(location.search).get('id');
+  if(openId && articles.find(a=>a.id===openId)){
+    openModal(openId);
+    history.replaceState({},'',location.pathname);
+  }
 }
 
 async function charger(){

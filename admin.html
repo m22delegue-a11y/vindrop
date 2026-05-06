@@ -202,7 +202,6 @@ requireAuth(['admin']).then(p=>{ if(!p)return; document.getElementById('who').te
 function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function toast(m,err){const el=document.getElementById('toast');el.textContent=m;el.className='show'+(err?' error':'');setTimeout(()=>el.className='',2400)}
 function showErr(h){const el=document.getElementById('cfgAlert');el.innerHTML='<strong>Erreur</strong> '+h;el.style.display='block'}
-function hostName(url){try{return new URL(url).hostname.replace('www.','')}catch{return 'lien'}}
 function empName(id){const e=employees.find(x=>x.id===id);return e?(e.name||e.email):null}
 
 async function init(){
