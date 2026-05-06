@@ -195,39 +195,79 @@ textarea{min-height:100px;resize:vertical}
 #toast.error{background:var(--bad)}
 #toast.success{background:var(--good)}
 
+/* ===== BOTTOM NAV (mobile only) ===== */
+.mobile-bottom-nav{display:none}
+
+/* ===== TABLET ===== */
 @media(max-width:1100px){.dashboard{grid-template-columns:1fr}.counters{grid-template-rows:1fr;grid-template-columns:repeat(4,1fr)}}
 @media(max-width:900px){.kanban{grid-template-columns:1fr}.modal-grid{grid-template-columns:1fr}.counters{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr)}}
-@media(max-width:600px){
+
+/* ===== MOBILE (≤640px) ===== */
+@media(max-width:640px){
   html,body{-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
   body{overflow:auto}
-  main{padding:12px;gap:12px;overflow:visible}
+  /* Perf : pas de blur lourd */
+  .app-header{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.97)}
+  .overlay{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(15,23,42,.65)}
+  /* Top nav-mid masqué : la bottom nav prend le relais */
+  .nav-mid{display:none}
+  main{padding:12px 12px 80px;gap:12px;overflow:visible}
   nav{flex-direction:column;align-items:flex-start;padding:10px 14px}
   .toolbar{flex-direction:column;align-items:stretch;padding:10px 14px;gap:6px}
-  .toolbar .btn,.tb-select,.search input{min-height:44px;font-size:.9rem}
-  .vacc-menu{min-width:180px}
-  /* Cartes stats compactes */
-  .counters{grid-template-columns:repeat(2,1fr);gap:6px}
-  .counter{padding:9px 10px;gap:8px}
-  .counter .c-icon{font-size:1.1rem}
-  .counter .c-val{font-size:1.1rem}
-  .counter .c-lbl{font-size:.6rem}
+  .toolbar .btn,.tb-select,.search input{min-height:44px;font-size:.9rem;padding:11px 14px}
+  /* Stats compactes */
+  .counters{grid-template-columns:repeat(2,1fr);gap:8px}
+  .counter{padding:11px 12px;gap:9px;border-radius:14px}
+  .counter .c-icon{font-size:1.2rem}
+  .counter .c-val{font-size:1.2rem}
+  .counter .c-lbl{font-size:.62rem}
   /* Dashboard */
-  .progress-card{padding:14px}
-  .progress-head .pct{font-size:1.3rem}
-  .btn-cta,.btn-focus{padding:13px 14px;font-size:.85rem}
-  /* Kanban : columns en pile, hauteur libre */
+  .progress-card{padding:16px;border-radius:14px}
+  .progress-head .pct{font-size:1.4rem}
+  .btn-cta,.btn-focus{padding:14px;font-size:.9rem;min-height:48px}
+  /* Kanban en pile */
   .kanban{grid-template-columns:1fr;flex:none}
-  .col{min-height:auto}
-  .col-list{max-height:none;overflow:visible}
+  .col{min-height:auto;border-radius:14px}
+  .col-list{max-height:none;overflow:visible;padding:10px 12px}
+  /* Cartes plus aérées au tap */
+  .prod{padding:12px;border-radius:12px}
+  .prod-thumb{width:64px;height:64px}
+  .prod-name{font-size:.92rem}
   /* Boutons tap-friendly */
-  .btn{min-height:42px;padding:10px 13px}
-  .btn-mark-posted{padding:8px 12px;font-size:.72rem;min-height:36px}
-  /* Modal full-screen sur mobile */
-  .modal{padding:18px;border-radius:14px}
-  .modal-section{padding:12px}
+  .btn{min-height:44px;padding:11px 14px}
+  .btn-mark-posted{padding:9px 14px;font-size:.78rem;min-height:38px}
+  /* Modal fullscreen */
+  .overlay.open{padding:0;align-items:stretch;justify-content:stretch}
+  .modal{width:100%;height:100vh;max-height:100vh;border-radius:0;padding:18px;overflow:auto}
+  .modal-section{padding:14px}
+  .dropzone{padding:22px 14px}
+  .dropzone .dz-msg{font-size:.92rem}
   /* Anim courtes */
-  *,*::before,*::after{animation-duration:.2s !important;transition-duration:.2s !important}
-  .prod{padding:10px}
+  *,*::before,*::after{animation-duration:.18s !important;transition-duration:.18s !important}
+  .prod:hover,.btn:hover{transform:none}
+
+  /* ===== BOTTOM NAV ===== */
+  .mobile-bottom-nav{
+    display:flex;
+    position:fixed;
+    bottom:0;left:0;right:0;
+    background:rgba(255,255,255,.97);
+    border-top:1px solid var(--line);
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));
+    z-index:50;
+    justify-content:space-around;
+    box-shadow:0 -2px 12px -3px rgba(15,23,42,.08);
+  }
+  .mobile-bottom-nav a{
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:6px 14px;border-radius:10px;
+    text-decoration:none;color:var(--muted);
+    font-weight:600;flex:1;max-width:120px;
+    transition:color .15s,background .15s;
+  }
+  .mobile-bottom-nav a.active{color:var(--primary);background:rgba(99,102,241,.09)}
+  .mobile-bottom-nav .bn-icon{font-size:1.3rem}
+  .mobile-bottom-nav .bn-lbl{font-size:.66rem;letter-spacing:.02em}
 }
 </style>
 </head>
@@ -346,6 +386,9 @@ textarea{min-height:100px;resize:vertical}
 
 <div id="toast"></div>
 
+<!-- Bottom nav (mobile only) -->
+<nav class="mobile-bottom-nav" id="mobileBottomNav"></nav>
+
 <script>
 let articles=[],vaccs=[],employees=[],current=null,uploadedImgs=[],profile=null;
 let isFocus=false, focusQueue=[], focusIdx=0;
@@ -366,9 +409,20 @@ requireAuth(['admin','employee']).then(p=>{
     document.getElementById('navMid').insertAdjacentHTML('afterbegin','<a href="admin.html">Admin</a>');
     document.getElementById('fEmp').style.display='';
   }
+  buildBottomNav('fiche');
   initDropzone();
   init();
 });
+
+function buildBottomNav(active){
+  const nav=document.getElementById('mobileBottomNav');
+  if(!nav)return;
+  const items=[];
+  if(profile && profile.role==='admin') items.push({key:'admin',href:'admin.html',icon:'⚙',label:'Admin'});
+  items.push({key:'fiche',href:'equipe.html',icon:'📝',label:'Fiche'});
+  items.push({key:'suivi',href:'suivi.html',icon:'📊',label:'Suivi'});
+  nav.innerHTML=items.map(i=>`<a href="${i.href}" class="${i.key===active?'active':''}"><span class="bn-icon">${i.icon}</span><span class="bn-lbl">${i.label}</span></a>`).join('');
+}
 
 /* ===== HELPERS ===== */
 function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}

@@ -89,20 +89,60 @@ tbody tr:hover{background:rgba(248,250,252,.8)}
 .modal-box h3{font-size:1.15rem;margin-bottom:6px}
 .modal-box .info{font-size:.75rem;color:var(--muted);margin-bottom:16px}
 .modal-close{position:absolute;top:14px;right:14px;border:none;background:var(--page);width:30px;height:30px;border-radius:10px;cursor:pointer;font-size:1rem}
+/* ===== BOTTOM NAV (mobile only) ===== */
+.mobile-bottom-nav{display:none}
+
+/* ===== TABLET ===== */
 @media(max-width:1200px){.grid-top{grid-template-columns:1fr 1fr}}
 @media(max-width:800px){.stats{grid-template-columns:repeat(3,1fr)}.grid-top{grid-template-columns:1fr}}
-@media(max-width:600px){
+
+/* ===== MOBILE (≤640px) ===== */
+@media(max-width:640px){
   html,body{-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
-  nav{flex-direction:column;align-items:flex-start;padding:10px 14px}
-  main{padding:12px;gap:10px}
-  .grid-top{grid-template-columns:1fr;gap:10px}
-  .card{padding:14px}
-  input,select,textarea,.btn{min-height:44px;font-size:.9rem}
-  .btn{padding:11px 14px}
-  .csv-dropzone{padding:18px 12px;font-size:.85rem}
+  /* Perf : pas de blur lourd */
+  nav{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.97);flex-direction:column;align-items:flex-start;padding:10px 14px}
+  /* Top nav-mid masqué */
+  .nav-mid{display:none}
+  main{padding:12px 12px 80px;gap:12px}
+  .grid-top{grid-template-columns:1fr;gap:12px}
+  .card{padding:16px;border-radius:14px}
+  .card h3{font-size:1.05rem;margin-bottom:12px}
+  input,select,textarea,.btn{min-height:46px;font-size:.92rem}
+  .btn{padding:12px 14px}
+  .btn-full{padding:13px}
+  .csv-dropzone{padding:22px 14px;font-size:.92rem;border-radius:14px}
   .list-card{max-height:none}
+  .list-item{padding:11px 12px;gap:10px}
+  .list-item .acts .btn{min-width:42px;min-height:42px;padding:8px 10px;font-size:.85rem !important}
+  /* Modals fullscreen */
+  .overlay,#editEmpModal{padding:0 !important;align-items:stretch !important}
+  .modal-box,#editEmpModal > div{width:100% !important;height:100vh !important;max-height:100vh !important;border-radius:0 !important;padding:22px !important;overflow:auto}
   /* Anim courtes */
-  *,*::before,*::after{animation-duration:.2s !important;transition-duration:.2s !important}
+  *,*::before,*::after{animation-duration:.18s !important;transition-duration:.18s !important}
+  .btn:hover{transform:none}
+
+  /* ===== BOTTOM NAV ===== */
+  .mobile-bottom-nav{
+    display:flex;
+    position:fixed;
+    bottom:0;left:0;right:0;
+    background:rgba(255,255,255,.97);
+    border-top:1px solid var(--line);
+    padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));
+    z-index:50;
+    justify-content:space-around;
+    box-shadow:0 -2px 12px -3px rgba(15,23,42,.08);
+  }
+  .mobile-bottom-nav a{
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    padding:6px 14px;border-radius:10px;
+    text-decoration:none;color:var(--muted);
+    font-weight:600;flex:1;max-width:120px;
+    transition:color .15s,background .15s;
+  }
+  .mobile-bottom-nav a.active{color:var(--primary);background:rgba(99,102,241,.09)}
+  .mobile-bottom-nav .bn-icon{font-size:1.3rem}
+  .mobile-bottom-nav .bn-lbl{font-size:.66rem;letter-spacing:.02em}
 }
 </style>
 </head>
@@ -194,10 +234,29 @@ tbody tr:hover{background:rgba(248,250,252,.8)}
 
 <div id="toast"></div>
 
+<!-- Bottom nav (mobile only) -->
+<nav class="mobile-bottom-nav" id="mobileBottomNav"></nav>
+
 <script>
 let articles=[],employees=[],vaccs=[],editingEmpId=null,editingVaccId=null;
 
-requireAuth(['admin']).then(p=>{ if(!p)return; document.getElementById('who').textContent=(p.name||p.email)+' · admin'; init() });
+requireAuth(['admin']).then(p=>{
+  if(!p)return;
+  document.getElementById('who').textContent=(p.name||p.email)+' · admin';
+  buildBottomNav('admin');
+  init();
+});
+
+function buildBottomNav(active){
+  const nav=document.getElementById('mobileBottomNav');
+  if(!nav)return;
+  const items=[
+    {key:'admin',href:'admin.html',icon:'⚙',label:'Admin'},
+    {key:'fiche',href:'equipe.html',icon:'📝',label:'Fiche'},
+    {key:'suivi',href:'suivi.html',icon:'📊',label:'Suivi'}
+  ];
+  nav.innerHTML=items.map(i=>`<a href="${i.href}" class="${i.key===active?'active':''}"><span class="bn-icon">${i.icon}</span><span class="bn-lbl">${i.label}</span></a>`).join('');
+}
 
 function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function toast(m,err){const el=document.getElementById('toast');el.textContent=m;el.className='show'+(err?' error':'');setTimeout(()=>el.className='',2400)}
