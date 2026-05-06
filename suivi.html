@@ -127,124 +127,25 @@ tbody tr:hover{background:rgba(248,250,252,.8)}
 .show-more-btn:hover{background:rgba(99,102,241,.14)}
 
 /* ===== ACCOUNT PICKER (toolbar) ===== */
-/* ===== BOTTOM NAV MOBILE ===== */
-.mobile-bottom-nav{display:none}
-
-/* ===== TABLET (641-1024px) ===== */
 @media(max-width:1100px){.stats{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:1024px) and (min-width:641px){
-  main{padding:0 16px 24px}
-  table{min-width:850px}
-}
-
-/* ===== MOBILE (≤640px) ===== */
-@media(max-width:640px){
+@media(max-width:600px){
   html,body{-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
-  /* Perf : pas de blur lourd sur mobile */
-  nav{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(255,255,255,.96);flex-direction:column;align-items:flex-start;padding:10px 14px;border-radius:14px}
-  .brd-overlay,.pv-overlay{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(15,23,42,.6)}
-  /* Top nav-mid masqué : la bottom nav prend le relais */
-  .nav-mid{display:none}
-  main{padding:0 12px 80px}
-  .stats{grid-template-columns:repeat(2,1fr);gap:8px}
-  .stat{padding:11px 12px;border-radius:14px}
-  .stat-val{font-size:1.3rem}
-  .stat-label{font-size:.58rem}
-
-  /* ===== TOOLBAR : full-width vertical ===== */
-  .toolbar{flex-direction:column;align-items:stretch;padding:12px;gap:8px;border-radius:14px}
-  .toolbar input,.toolbar select{min-height:44px;font-size:.92rem;padding:11px 14px}
-  .toolbar .btn{min-height:44px;padding:11px 14px}
-  .filters{justify-content:flex-start;overflow-x:auto;padding:4px;border-radius:10px;-webkit-overflow-scrolling:touch}
-  .filters::-webkit-scrollbar{display:none}
-  .fbtn{flex-shrink:0;font-size:.78rem;padding:8px 12px;min-height:36px}
-
-  /* ===== TABLE → CARDS ===== */
-  .table-wrap{background:transparent;border:none;box-shadow:none;border-radius:0;overflow:visible}
-  .table-scroll{overflow:visible}
-  table{min-width:0;width:100%;border-collapse:separate;border-spacing:0}
-  thead{display:none}
-  tbody{display:block}
-  tr{display:block;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:10px;box-shadow:0 2px 8px -3px rgba(15,23,42,.06)}
-  tr.empty-row{padding:24px;text-align:center;color:var(--muted)}
-  tr.show-more-row{padding:0;border:none;background:transparent;box-shadow:none}
-  td{display:flex;align-items:center;gap:10px;padding:6px 0;border:none;font-size:.84rem;min-height:32px}
-  td::before{
-    content:attr(data-label);
-    color:var(--muted);
-    font-size:.62rem;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:.05em;
-    min-width:78px;
-    flex-shrink:0;
-  }
-  /* Photo cell : header de la card, pas de label */
-  td[data-label="Photo"]{padding:0 0 10px;border-bottom:1px solid var(--line);margin-bottom:6px}
-  td[data-label="Photo"]::before{display:none}
-  td[data-label="Photo"] .photo-cell img,td[data-label="Photo"] .photo-cell .ph{width:60px;height:60px;border-radius:10px}
-  /* Produit : titre en gros, plein largeur */
-  td[data-label="Produit"]{display:block;padding:0 0 8px}
-  td[data-label="Produit"]::before{display:none}
-  td[data-label="Produit"] .title-cell strong{font-size:1rem;font-family:'Outfit',sans-serif}
-  td[data-label="Produit"] .title-cell span{font-size:.75rem;margin-top:3px}
-  /* Empty bordereau cell : caché */
-  td[data-label="Bordereau"] span[style*="muted"]{font-size:.78rem}
-  /* Bordereau actif : padding cohérent */
-  td[data-label="Bordereau"] .btn{padding:8px 12px;min-height:36px;font-size:.75rem !important}
-  /* Checkboxes : taille tactile */
-  td[data-label="Posté"] .chk,
-  td[data-label="Vendu"] .chk,
-  td[data-label="Prolongé"] .chk,
-  td[data-label="Warehouse"] .chk{width:26px;height:26px;border-radius:8px}
-  /* Actions row : full-width, gros boutons */
-  td[data-label="Actions"]{padding:10px 0 0;border-top:1px solid var(--line);margin-top:6px;display:block}
-  td[data-label="Actions"]::before{display:none}
-  td[data-label="Actions"] .row-acts{display:flex;gap:6px;flex-wrap:wrap;align-items:stretch}
-  td[data-label="Actions"] .btn{flex:1 1 auto;min-height:42px;padding:10px 12px;font-size:.82rem !important;justify-content:center}
-  td[data-label="Actions"] .btn.btn-edit{flex:0 0 auto;min-width:48px}
-  td[data-label="Actions"] .btn.btn-danger{flex:0 0 auto;min-width:48px}
-
-  /* ===== MODALS FULLSCREEN ===== */
-  .pv-overlay.open,.brd-overlay.open{padding:0;align-items:stretch;justify-content:stretch}
-  .pv-box,.brd-box{width:100%;height:100vh;max-height:100vh;border-radius:0;padding:20px}
-  .pv-box{overflow:auto}
-  .pv-grid{grid-template-columns:1fr;gap:12px}
-  .pv-actions{flex-direction:column;gap:8px}
-  .pv-actions .btn{padding:13px;min-height:46px}
-  .brd-box .btn{min-height:46px;font-size:.92rem}
-
-  /* ===== TAP TARGETS ===== */
-  .btn{min-height:42px}
+  nav{flex-direction:column;align-items:flex-start;padding:10px 14px}
+  main{padding:0 12px 24px}
+  .stats{grid-template-columns:repeat(2,1fr);gap:6px}
+  .stat{padding:9px 10px}
+  .stat-val{font-size:1.2rem}
+  .stat-label{font-size:.55rem}
+  .toolbar{flex-direction:column;align-items:stretch;padding:10px;gap:6px}
+  .toolbar input,.toolbar select{min-height:44px;font-size:.9rem}
+  .toolbar .btn{min-height:42px}
+  /* Boutons et checkbox tap-friendly */
+  .btn{min-height:40px}
   .chk{width:24px;height:24px}
-
-  /* Anim plus courtes */
-  *,*::before,*::after{animation-duration:.18s !important;transition-duration:.18s !important}
-  /* Pas de transform au hover sur mobile (perf + bug iOS) */
-  .btn:hover,.prod:hover,tr:hover{transform:none}
-
-  /* ===== BOTTOM NAV ===== */
-  .mobile-bottom-nav{
-    display:flex;
-    position:fixed;
-    bottom:0;left:0;right:0;
-    background:rgba(255,255,255,.97);
-    border-top:1px solid var(--line);
-    padding:8px 12px calc(8px + env(safe-area-inset-bottom,0px));
-    z-index:50;
-    justify-content:space-around;
-    box-shadow:0 -2px 12px -3px rgba(15,23,42,.08);
-  }
-  .mobile-bottom-nav a{
-    display:flex;flex-direction:column;align-items:center;gap:2px;
-    padding:6px 14px;border-radius:10px;
-    text-decoration:none;color:var(--muted);
-    font-weight:600;flex:1;max-width:120px;
-    transition:color .15s,background .15s;
-  }
-  .mobile-bottom-nav a.active{color:var(--primary);background:rgba(99,102,241,.09)}
-  .mobile-bottom-nav .bn-icon{font-size:1.3rem}
-  .mobile-bottom-nav .bn-lbl{font-size:.66rem;letter-spacing:.02em}
+  /* Anim courtes */
+  *,*::before,*::after{animation-duration:.2s !important;transition-duration:.2s !important}
+  /* La table reste scrollable horizontalement (déjà via .table-scroll) */
+  table{min-width:900px}
 }
 </style>
 </head>
@@ -338,9 +239,6 @@ tbody tr:hover{background:rgba(248,250,252,.8)}
 
 <div id="toast"></div>
 
-<!-- Bottom nav (mobile only) -->
-<nav class="mobile-bottom-nav" id="mobileBottomNav"></nav>
-
 <script>
 let articles=[],vaccs=[],filtre='all',profile=null;
 const ROWS_PER_PAGE=50;
@@ -357,19 +255,8 @@ requireAuth(['admin','employee']).then(p=>{
   profile=p;
   document.getElementById('who').textContent=(p.name||p.email)+' · '+p.role;
   if(p.role==='admin') document.getElementById('navMid').insertAdjacentHTML('afterbegin','<a href="admin.html">Admin</a>');
-  buildBottomNav('suivi');
   init();
 });
-
-function buildBottomNav(active){
-  const nav=document.getElementById('mobileBottomNav');
-  if(!nav)return;
-  const items=[];
-  if(profile && profile.role==='admin') items.push({key:'admin',href:'admin.html',icon:'⚙',label:'Admin'});
-  items.push({key:'fiche',href:'equipe.html',icon:'📝',label:'Fiche'});
-  items.push({key:'suivi',href:'suivi.html',icon:'📊',label:'Suivi'});
-  nav.innerHTML=items.map(i=>`<a href="${i.href}" class="${i.key===active?'active':''}"><span class="bn-icon">${i.icon}</span><span class="bn-lbl">${i.label}</span></a>`).join('');
-}
 
 function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 function toast(m,err){const el=document.getElementById('toast');el.textContent=m;el.className='show'+(err?' error':'');setTimeout(()=>el.className='',2400)}
@@ -436,17 +323,17 @@ function renderRow(a){
         : `<button class="btn btn-border" style="font-size:.7rem" onclick="openBrd('${a.id}')">📎 Importer</button>`)
     : '<span style="color:var(--muted)">—</span>';
   return`<tr data-id="${a.id}">
-    <td data-label="Photo"><div class="photo-cell">${img?`<img src="${esc(img)}" loading="lazy" onerror="this.outerHTML='<div class=ph>?</div>'">`:"<div class=\"ph\">?</div>"} ${a.images.length>1?`<span class="cnt">${a.images.length}</span>`:''}</div></td>
-    <td data-label="Produit"><div class="title-cell"><strong>${esc(name)}</strong><span>${esc(a.size||'—')} · ${esc(a.color||'—')}${a.brand?' · '+esc(a.brand):''}</span></div></td>
-    <td data-label="Compte">${vaccName}</td>
-    <td data-label="Prix"><div style="display:grid;gap:3px"><span class="tag green">${a.price||0} €</span>${a.min_price?`<span class="tag amber">Min ${a.min_price} €</span>`:''}</div></td>
-    <td data-label="Statut">${tag}</td>
-    <td data-label="Posté"><input type="checkbox" class="chk" ${(a.status==='posted'||a.status==='sold'||a.status==='pending_order')?'checked':''} onchange="togglePosted('${a.id}',this.checked)"></td>
-    <td data-label="Vendu"><input type="checkbox" class="chk green" ${a.status==='sold'?'checked':''} onchange="toggleSold('${a.id}',this.checked)"></td>
-    <td data-label="Prolongé"><input type="checkbox" class="chk amber" ${a.prolonged?'checked':''} onchange="togglePending('${a.id}',this.checked)"></td>
-    <td data-label="Warehouse"><input type="checkbox" class="chk" ${a.warehouse?'checked':''} onchange="toggleField('${a.id}','warehouse',this.checked)"></td>
-    <td data-label="Bordereau">${brdCell}</td>
-    <td data-label="Actions"><div class="row-acts">
+    <td><div class="photo-cell">${img?`<img src="${esc(img)}" loading="lazy" onerror="this.outerHTML='<div class=ph>?</div>'">`:"<div class=\"ph\">?</div>"} ${a.images.length>1?`<span class="cnt">${a.images.length}</span>`:''}</div></td>
+    <td><div class="title-cell"><strong>${esc(name)}</strong><span>${esc(a.size||'—')} · ${esc(a.color||'—')}${a.brand?' · '+esc(a.brand):''}</span></div></td>
+    <td>${vaccName}</td>
+    <td><div style="display:grid;gap:3px"><span class="tag green">${a.price||0} €</span>${a.min_price?`<span class="tag amber">Min ${a.min_price} €</span>`:''}</div></td>
+    <td>${tag}</td>
+    <td><input type="checkbox" class="chk" ${(a.status==='posted'||a.status==='sold'||a.status==='pending_order')?'checked':''} onchange="togglePosted('${a.id}',this.checked)"></td>
+    <td><input type="checkbox" class="chk green" ${a.status==='sold'?'checked':''} onchange="toggleSold('${a.id}',this.checked)"></td>
+    <td><input type="checkbox" class="chk amber" ${a.prolonged?'checked':''} onchange="togglePending('${a.id}',this.checked)"></td>
+    <td><input type="checkbox" class="chk" ${a.warehouse?'checked':''} onchange="toggleField('${a.id}','warehouse',this.checked)"></td>
+    <td>${brdCell}</td>
+    <td><div class="row-acts">
       ${a.supplier_url?`<a href="${esc(a.supplier_url)}" target="_blank" class="btn btn-ghost" style="font-size:.7rem" title="Lien fournisseur">🔗</a>`:''}
       <button class="btn btn-fiche" style="font-size:.7rem" onclick="openPreview('${a.id}')" title="Aperçu fiche">👁 Aperçu</button>
       <button class="btn btn-edit" style="font-size:.7rem" onclick="goEdit('${a.id}')" title="Modifier la fiche">✏️</button>
