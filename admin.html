@@ -262,7 +262,8 @@ async function charger(){
   const [empRes,vaccRes,artRes]=await Promise.all([
     sb.from('profiles').select('id,name,email').eq('role','employee').order('name'),
     sb.from('vinted_accounts').select('*').order('name'),
-    sb.from('articles').select('*, vinted_account:vinted_accounts!vinted_account_id(id,name,assigned_to)').order('created_at',{ascending:false})
+    // PERF : on n'a besoin que de compter les articles par compte Vinted ici
+    sb.from('articles').select('id,vinted_account_id').limit(10000)
   ]);
   if(artRes.error){showErr(esc(artRes.error.message));return}
   document.getElementById('cfgAlert').style.display='none';

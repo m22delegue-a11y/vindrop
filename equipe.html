@@ -396,8 +396,15 @@ async function init(){
 }
 
 async function charger(){
+  // PERF : on filtre le statut côté serveur (cette page n'affiche que draft + ready)
+  //        évite de transférer des centaines de fiches posted/sold avec leurs images base64
+  //        + limite de sécurité pour éviter le statement timeout
   const queries=[
-    sb.from('articles').select('id,title,description,brand,price,min_price,size,color,supplier_url,images,status,vinted_account_id,created_at, vinted_account:vinted_accounts!vinted_account_id(id,name,assigned_to)').order('created_at',{ascending:false}),
+    sb.from('articles')
+      .select('id,title,description,brand,price,min_price,size,color,supplier_url,images,status,vinted_account_id,created_at, vinted_account:vinted_accounts!vinted_account_id(id,name,assigned_to)')
+      .in('status',['draft','ready'])
+      .order('created_at',{ascending:false})
+      .limit(500),
     sb.from('vinted_accounts').select('id,name,assigned_to').order('name')
   ];
   if(profile && profile.role==='admin'){
@@ -624,7 +631,11 @@ function exitFocusMode(){
 }
 
 async function chargerSilent(){
-  const{data}=await sb.from('articles').select('id,title,description,brand,price,min_price,size,color,supplier_url,images,status,vinted_account_id,created_at, vinted_account:vinted_accounts!vinted_account_id(id,name,assigned_to)').order('created_at',{ascending:false});
+  const{data}=await sb.from('articles')
+    .select('id,title,description,brand,price,min_price,size,color,supplier_url,images,status,vinted_account_id,created_at, vinted_account:vinted_accounts!vinted_account_id(id,name,assigned_to)')
+    .in('status',['draft','ready'])
+    .order('created_at',{ascending:false})
+    .limit(500);
   if(data) articles=data.map(a=>({...a,images:Array.isArray(a.images)?a.images:[]}));
 }
 
