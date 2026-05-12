@@ -73,7 +73,6 @@ main{max-width:1500px;margin:18px auto 0;padding:0 14px 30px}
 .pv-actions{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
 .pv-actions .btn{flex:1;min-width:130px;padding:11px}
 @media(max-width:700px){.pv-grid{grid-template-columns:1fr}}
-.btn-border{color:#fff;background:linear-gradient(135deg,#f59e0b,#d97706);box-shadow:0 4px 12px -4px rgba(245,158,11,.3)}
 .btn-primary{color:#fff;background:linear-gradient(135deg,var(--primary),#8b5cf6);box-shadow:var(--shadow-m)}
 .table-wrap{background:var(--card);border:1px solid #fff;border-radius:18px;box-shadow:var(--shadow-s);overflow:hidden}
 .table-scroll{overflow-x:auto}
@@ -100,12 +99,6 @@ tbody tr:hover{background:rgba(248,250,252,.8)}
 #toast{position:fixed;bottom:20px;right:20px;background:var(--dark);color:#fff;padding:10px 18px;font-size:.8rem;border-radius:12px;font-weight:600;opacity:0;transform:translateY(16px);transition:all .35s;z-index:200}
 #toast.show{opacity:1;transform:translateY(0)}
 #toast.error{background:var(--bad)}
-.brd-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(15,23,42,.35);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:100;padding:14px}
-.brd-overlay.open{display:flex}
-.brd-box{width:min(480px,100%);background:#fff;border-radius:20px;box-shadow:0 24px 48px -12px rgba(15,23,42,.2);padding:24px;position:relative}
-.brd-box h3{font-size:1.1rem;margin-bottom:14px}
-.brd-close{position:absolute;top:14px;right:14px;border:none;background:var(--page);width:28px;height:28px;border-radius:10px;font-size:1rem;cursor:pointer;display:grid;place-items:center}
-.brd-preview{margin-top:12px;padding:12px;border-radius:10px;background:var(--page);border:1px solid var(--line);font-size:.8rem;color:var(--muted)}
 .chk{appearance:none;width:20px;height:20px;border-radius:6px;border:2px solid #cbd5e1;background:#fff;cursor:pointer;position:relative;transition:border-color .15s,background .15s}
 .chk:hover{border-color:var(--primary)}
 .chk:checked{border-color:var(--primary);background:var(--primary);box-shadow:0 2px 6px rgba(99,102,241,.3)}
@@ -188,12 +181,12 @@ tbody tr:hover{background:rgba(248,250,252,.8)}
 
   <div class="table-wrap"><div class="table-scroll"><table>
     <thead><tr>
-      <th>Photo</th><th>Produit</th><th>Compte Vinted</th><th>Prix</th><th>Statut</th><th>Posté</th><th>Vendu</th><th>Prolongé</th><th>Warehouse</th><th>Bordereau</th><th>Actions</th>
+      <th>Photo</th><th>Produit</th><th>Compte Vinted</th><th>Prix</th><th>Statut</th><th>Posté</th><th>Vendu</th><th>Prolongé</th><th>Warehouse</th><th>Actions</th>
     </tr></thead>
     <tbody id="tbody">
-      <tr class="skel-row"><td><div class="skel-bar w30" style="height:40px;width:40px;border-radius:8px"></div></td><td><div class="skel-bar w60" style="margin-bottom:4px"></div><div class="skel-bar w40" style="height:10px"></div></td><td><div class="skel-bar w40"></div></td><td><div class="skel-bar w30"></div></td><td><div class="skel-bar w30"></div></td><td colspan="6"><div class="skel-bar w20"></div></td></tr>
-      <tr class="skel-row"><td><div class="skel-bar w30" style="height:40px;width:40px;border-radius:8px"></div></td><td><div class="skel-bar w60" style="margin-bottom:4px"></div><div class="skel-bar w40" style="height:10px"></div></td><td><div class="skel-bar w40"></div></td><td><div class="skel-bar w30"></div></td><td><div class="skel-bar w30"></div></td><td colspan="6"><div class="skel-bar w20"></div></td></tr>
-      <tr class="skel-row"><td><div class="skel-bar w30" style="height:40px;width:40px;border-radius:8px"></div></td><td><div class="skel-bar w60" style="margin-bottom:4px"></div><div class="skel-bar w40" style="height:10px"></div></td><td><div class="skel-bar w40"></div></td><td><div class="skel-bar w30"></div></td><td><div class="skel-bar w30"></div></td><td colspan="6"><div class="skel-bar w20"></div></td></tr>
+      <tr class="skel-row"><td><div class="skel-bar w30" style="height:40px;width:40px;border-radius:8px"></div></td><td><div class="skel-bar w60" style="margin-bottom:4px"></div><div class="skel-bar w40" style="height:10px"></div></td><td><div class="skel-bar w40"></div></td><td><div class="skel-bar w30"></div></td><td><div class="skel-bar w30"></div></td><td colspan="5"><div class="skel-bar w20"></div></td></tr>
+      <tr class="skel-row"><td><div class="skel-bar w30" style="height:40px;width:40px;border-radius:8px"></div></td><td><div class="skel-bar w60" style="margin-bottom:4px"></div><div class="skel-bar w40" style="height:10px"></div></td><td><div class="skel-bar w40"></div></td><td><div class="skel-bar w30"></div></td><td><div class="skel-bar w30"></div></td><td colspan="5"><div class="skel-bar w20"></div></td></tr>
+      <tr class="skel-row"><td><div class="skel-bar w30" style="height:40px;width:40px;border-radius:8px"></div></td><td><div class="skel-bar w60" style="margin-bottom:4px"></div><div class="skel-bar w40" style="height:10px"></div></td><td><div class="skel-bar w40"></div></td><td><div class="skel-bar w30"></div></td><td><div class="skel-bar w30"></div></td><td colspan="5"><div class="skel-bar w20"></div></td></tr>
     </tbody>
   </table></div></div>
 </main>
@@ -219,21 +212,6 @@ tbody tr:hover{background:rgba(248,250,252,.8)}
       </div>
     </div>
     <div class="pv-actions" id="pvActions"></div>
-  </div>
-</div>
-
-<div class="brd-overlay" id="brdModal" onclick="if(event.target===this)closeBrd()">
-  <div class="brd-box">
-    <button class="brd-close" onclick="closeBrd()">✕</button>
-    <h3>📄 Bordereau d'envoi</h3>
-    <p style="font-size:.8rem;color:var(--muted);margin-bottom:12px" id="brdInfo"></p>
-    <button class="btn btn-border" onclick="document.getElementById('brdFileInput').click()" style="width:100%;padding:11px">📎 Importer un PDF</button>
-    <input type="file" id="brdFileInput" accept="application/pdf" style="display:none" onchange="handleBrdFile(this.files)">
-    <div id="brdPreview" class="brd-preview">Aucun bordereau importé.</div>
-    <div id="brdActions" style="display:none;margin-top:10px">
-      <a class="btn btn-ghost" id="brdDlBtn" style="width:100%;padding:10px;text-decoration:none;justify-content:center" download="bordereau.pdf">⬇ Télécharger le PDF</a>
-    </div>
-    <button class="btn btn-primary" id="brdSaveBtn" onclick="saveBordereau()" style="width:100%;margin-top:12px;padding:11px">💾 Enregistrer</button>
   </div>
 </div>
 
@@ -317,11 +295,6 @@ function renderRow(a){
   const img=a.images[0]||'';
   const tag=`<span class="tag ${STATUS_TAG[a.status]||'amber'}">${STATUS_LABEL[a.status]||a.status}</span>`;
   const vaccName=a.vinted_account?esc(a.vinted_account.name):'<span style="color:var(--muted)">—</span>';
-  const brdCell = a.prolonged
-    ? (a.bordereau&&a.bordereau.src
-        ? `<a href="${esc(a.bordereau.src)}" download="${esc(a.bordereau.name||'bordereau.pdf')}" class="btn btn-ghost" style="font-size:.7rem">⬇ PDF</a> <button class="btn btn-ghost" style="font-size:.7rem" onclick="openBrd('${a.id}')" title="Remplacer">✏️</button>`
-        : `<button class="btn btn-border" style="font-size:.7rem" onclick="openBrd('${a.id}')">📎 Importer</button>`)
-    : '<span style="color:var(--muted)">—</span>';
   return`<tr data-id="${a.id}">
     <td><div class="photo-cell">${img?`<img src="${esc(img)}" loading="lazy" onerror="this.outerHTML='<div class=ph>?</div>'">`:"<div class=\"ph\">?</div>"} ${a.images.length>1?`<span class="cnt">${a.images.length}</span>`:''}</div></td>
     <td><div class="title-cell"><strong>${esc(name)}</strong><span>${esc(a.size||'—')} · ${esc(a.color||'—')}${a.brand?' · '+esc(a.brand):''}</span></div></td>
@@ -332,7 +305,6 @@ function renderRow(a){
     <td><input type="checkbox" class="chk green" ${a.status==='sold'?'checked':''} onchange="toggleSold('${a.id}',this.checked)"></td>
     <td><input type="checkbox" class="chk amber" ${a.prolonged?'checked':''} onchange="togglePending('${a.id}',this.checked)"></td>
     <td><input type="checkbox" class="chk" ${a.warehouse?'checked':''} onchange="toggleField('${a.id}','warehouse',this.checked)"></td>
-    <td>${brdCell}</td>
     <td><div class="row-acts">
       ${a.supplier_url?`<a href="${esc(a.supplier_url)}" target="_blank" class="btn btn-ghost" style="font-size:.7rem" title="Lien fournisseur">🔗</a>`:''}
       <button class="btn btn-fiche" style="font-size:.7rem" onclick="openPreview('${a.id}')" title="Aperçu fiche">👁 Aperçu</button>
@@ -376,13 +348,13 @@ function appendHtml(body, html){
 }
 
 function showMoreRow(remaining){
-  return `<tr class="show-more-row"><td colspan="11"><button class="show-more-btn" onclick="showMoreRows()">Voir ${remaining} ligne${remaining>1?'s':''} de plus…</button></td></tr>`;
+  return `<tr class="show-more-row"><td colspan="10"><button class="show-more-btn" onclick="showMoreRows()">Voir ${remaining} ligne${remaining>1?'s':''} de plus…</button></td></tr>`;
 }
 
 function render(){
   const list=getFilteredList();
   const body=document.getElementById('tbody');
-  if(!list.length){body.innerHTML='<tr class="empty-row"><td colspan="11">Aucun résultat.</td></tr>';return}
+  if(!list.length){body.innerHTML='<tr class="empty-row"><td colspan="10">Aucun résultat.</td></tr>';return}
 
   const visible=list.slice(0,rowLimit);
   const remaining=list.length-visible.length;
@@ -497,7 +469,7 @@ async function supprimer(id){
   articles.splice(idx,1);
   renderStats(); majComptes();
   const tbody=document.getElementById('tbody');
-  if(!tbody.querySelector('tr')) tbody.innerHTML='<tr class="empty-row"><td colspan="11">Aucun résultat.</td></tr>';
+  if(!tbody.querySelector('tr')) tbody.innerHTML='<tr class="empty-row"><td colspan="10">Aucun résultat.</td></tr>';
 
   const{error}=await sb.from('articles').delete().eq('id',id);
   if(error){
@@ -546,10 +518,9 @@ function openPreview(id){
   setVal('pvVDesc', a.description);
   setVal('pvVBrand', a.brand);
 
-  // Actions : lien fournisseur, bordereau si dispo
+  // Actions : lien fournisseur + modifier
   const actions=[];
   if(a.supplier_url) actions.push(`<a href="${esc(a.supplier_url)}" target="_blank" class="btn btn-ghost">🔗 Lien fournisseur</a>`);
-  if(a.bordereau && a.bordereau.src) actions.push(`<a href="${esc(a.bordereau.src)}" download="${esc(a.bordereau.name||'bordereau.pdf')}" class="btn btn-border">⬇ Bordereau PDF</a>`);
   actions.push(`<button class="btn btn-fiche" onclick="goEdit('${a.id}')">✏️ Modifier la fiche</button>`);
   document.getElementById('pvActions').innerHTML=actions.join('');
 
@@ -567,53 +538,6 @@ function pvCopy(id,btn){
   }).catch(()=>toast('Erreur copie',true));
 }
 
-/* === BORDEREAU === */
-let brdArticleId=null,brdFile=null;
-
-function openBrd(id){
-  brdArticleId=id;brdFile=null;
-  const art=articles.find(a=>a.id===id);
-  document.getElementById('brdInfo').textContent=art?`Produit: ${art.title||'Sans titre'} — ${art.price||0} €`:'';
-  const existing=art&&art.bordereau;
-  document.getElementById('brdPreview').textContent=existing?`PDF existant: ${existing.name||'bordereau.pdf'}`:'Aucun bordereau importé.';
-  const actions=document.getElementById('brdActions');
-  if(existing&&existing.src){
-    actions.style.display='block';
-    document.getElementById('brdDlBtn').href=existing.src;
-    document.getElementById('brdDlBtn').download=existing.name||'bordereau.pdf';
-  }else{actions.style.display='none'}
-  document.getElementById('brdFileInput').value='';
-  document.getElementById('brdModal').classList.add('open');
-}
-function closeBrd(){document.getElementById('brdModal').classList.remove('open');brdArticleId=null;brdFile=null}
-
-function fileToDataUrl(f){return new Promise((r,j)=>{const rd=new FileReader();rd.onload=()=>r(rd.result);rd.onerror=j;rd.readAsDataURL(f)})}
-
-async function handleBrdFile(files){
-  const f=files&&files[0];if(!f)return;
-  brdFile={name:f.name,type:f.type,src:await fileToDataUrl(f)};
-  document.getElementById('brdPreview').textContent=`PDF prêt: ${f.name}`;
-  const actions=document.getElementById('brdActions');
-  actions.style.display='block';
-  document.getElementById('brdDlBtn').href=brdFile.src;
-  document.getElementById('brdDlBtn').download=brdFile.name;
-}
-
-async function saveBordereau(){
-  if(!brdArticleId)return;
-  const art=articles.find(a=>a.id===brdArticleId);if(!art)return;
-  const btn=document.getElementById('brdSaveBtn');btn.textContent='Enregistrement...';btn.disabled=true;
-  const oldBrd=art.bordereau;
-  const newBrd=brdFile||art.bordereau;
-  // Optimistic
-  art.bordereau=newBrd;
-  patchRow(art.id);
-  closeBrd();
-  toast('Bordereau enregistré ✓');
-  const{error}=await sb.from('articles').update({bordereau:newBrd}).eq('id',brdArticleId);
-  btn.textContent='💾 Enregistrer';btn.disabled=false;
-  if(error){art.bordereau=oldBrd;patchRow(art.id);toast('Erreur: '+error.message,true)}
-}
 </script>
 </body>
 </html>
